@@ -1,0 +1,23 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea uno slide show ken burns con le ultime news
+	Richiede come parametri:
+	-	dove: un selettore TLAB opzionale, di default viene inserito nella terza colonna
+
+*/
+global $nomi_mesi;
+$n=14;
+$img=array();
+$titoli=array();
+$url=array();
+foreach(db::query("SELECT titolo,data,id FROM _sezione_news WHERE stato='pubblicato' ORDER BY data DESC,modificata DESC LIMIT $n")->righe()as $riga){
+	$img[]="'/static/n/400/{$riga["id"]}.jpg'";
+	$giorno=substr($riga["data"],8,2);
+	$mese=$nomi_mesi[substr($riga["data"],5,2)+0];
+	$anno=substr($riga["data"],0,4);
+	$titoli[]="'<b>$giorno $mese $anno<'+'/b>".entita($riga["titolo"],ENT_QUOTES)."'";
+	$url[]="'/news/{$riga["id"]}/".formattadata_news($riga["data"])."-".urlizza($riga["titolo"]).".html'";
+}
+M::carica(isset($dove)?$dove:_COLONNA3,'<h2><a href="/news">News cinema </a></h2>');
+M::modulo("kenburns",array("dove"=>isset($dove)?$dove:_COLONNA3,"img"=>$img,"titoli"=>$titoli,"url"=>$url));

@@ -1,0 +1,12 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea un sistema per navigare tra una pagina e l'altra quando i contenuti sono divisi in più pagine. Utilizza i seguenti parametri:
+	-	dove: un selettore TLAB
+	- pagine_totali: il numero di pagine in cui è diviso il contenuto
+
+*/
+global $_NUMERO_PAGINA,$_PARAMETRI,$_PAGINA;
+$urlbase=preg_replace("#(\/pagina-[0-9]+)*(\/|\.html)$#","",_URL);
+if($pagine_totali>1)
+	M::carica($dove,"<div id='navigatore'>".($_NUMERO_PAGINA>1?'<a href="/'.$urlbase.'/pagina-'.($_NUMERO_PAGINA-1).'.html">&ccedil;</a>':"")."<select id='navigatore_pagine' data-attuale='$_NUMERO_PAGINA' data-tot='$pagine_totali' data-href='/$urlbase/pagina-#.html'></select>".($_NUMERO_PAGINA<$pagine_totali?'<a href="/'.$urlbase.'/pagina-'.($_NUMERO_PAGINA+1).'.html">&ecirc;</a>':"")."</div>");

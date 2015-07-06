@@ -1,0 +1,12 @@
+<?php
+require "_mappa_compatibilita"._;
+header($_SERVER['SERVER_PROTOCOL']." 404 Not Found");
+header("Status: 404 Not Found");
+$chiavi=preg_replace(
+	array("#\.html$#","#_#","#[^a-z ]+#","#\,\,+#","#^\,#","#\,$#"),
+	array("",         " ",  ",",         ",",     "",     ""),_URL);
+M::accendi("mono");
+M::titolo("Errore 404 - Pagina non trovata");
+$alternative=M::modulo("collegati",array("keywords"=>$chiavi,"max"=>6));
+M::carica(M::modulo("box",array("flag"=>"E","titolo"=>"Errore 404 - Pagina non trovata","class"=>"e404 tuttapagina")),'<p>Ce l\'abbiamo messa tutta, ma non siamo proprio riusciti a trovare la pagina <br><em>'._URL.'</em></p>'.(empty($alternative)?"":'<p>Non &egrave; che stavi cercando una di queste?</p><div class="e404alternative">'.$alternative.'</div>').'<div class="clearfix"></div><p>Se '.(empty($alternative)?"":" invece").' sei sicuro che quella pagina dovrebbe essere qua, <a href="/contatti.html">mandaci un messaggio</a> per segnalarcelo, magari abbiamo solo dimenticato di rimetterla al suo posto l\'ultima volta che l\'abbiamo usata...</p>');
+die;

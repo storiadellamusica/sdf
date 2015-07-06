@@ -1,0 +1,23 @@
+body/header/nav {
+	inc/cerca;
+	inc/menu
+}
+
+body/div[@role="document"]/nav {
+	inc/sottomenu
+}
+
+//footer {
+	inc/note
+}
+
+<body/header {
+	inc/fbml
+}
+body/header/div[@class="bnr"] {
+	inc/banner/header
+}
+
+body {
+	inc/analytics
+}

@@ -1,0 +1,5 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$tmp=explode("/",_URL);
+$uid=str_replace(".html","",array_pop($tmp));
+if(preg_match("#^pagina\-[0-9]+$#",$uid))$uid=array_pop($tmp);
+if(!$dati=db::query("SELECT phpbb_users.user_id,phpbb_users.username,sdmt_users_options.user_bio,user_regdate,user_livello FROM phpbb_users LEFT JOIN sdmt_users_options ON phpbb_users.user_id=sdmt_users_options.user_id WHERE username='".addslashes($uid)."'")->riga())require _404;

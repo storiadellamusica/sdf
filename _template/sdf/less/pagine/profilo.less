@@ -1,0 +1,64 @@
+.box.userprofile>div{
+	padding: 5px 15px;
+	font-size: 14px;
+	line-height: 1.2;
+	h1{
+		margin: 10px 0;
+		font-size: 18px;
+		color: @colore_a;
+		em{
+			font-size: 14px;
+		}
+	}
+	p{
+		text-align: justify;
+		margin: 5px 0;
+		text-indent:5px;
+	}
+	img{
+		float: left;
+		max-width: 150px;
+		margin: 5px 10px 5px 5px;
+		.dropshadow(0,0,3px,0.4);
+	}
+}
+.usercontrib{
+	a{
+		display: block;
+		float: left;
+		padding: 20px 0;
+		font-size: 14px;
+		width: 50%;
+		overflow: hidden;
+		text-align: center;
+		color: @testo;
+		text-decoration: none;
+		strong{
+			font-size: 24px;
+			display: block;
+			text-align: center;
+			color:@colore_b;
+			&::before{
+				font-family: EntypoRegular;
+				font-size: 60px;
+				line-height: 20px;
+				margin-right: 4px;
+			}
+		}
+		&.usercommenti strong::before{
+			content: ":";
+		}
+		&.uservoti strong::before{
+			content: "7";
+		}
+		&.userrecensioni strong::before{
+			content: "q";
+		}
+		&.userarticoli strong::before{
+			content: "&";
+		}
+		&:hover strong{
+				text-shadow: 1px 1px 5px #bbb;
+		}
+	}
+}

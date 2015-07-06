@@ -1,0 +1,38 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+function _amazon_urlencode($a){return str_replace("%7E","~",rawurlencode($a));}
+function _amazon_deutf8($a){return htmlentities($a,ENT_COMPAT,'UTF-8')==""?$a:utf8_decode($a);}
+function _amazon_link($artista,$titolo){
+	$parametri=array(
+		'Timestamp'=>gmdate("Y-m-d\TH:i:s\Z"),
+		'Version'=>'2011-08-01',
+		'AWSAccessKeyId'=>_AMAZON_ACCESS_KEY,
+		'AssociateTag'=>_AMAZON_TAG,
+		'SearchIndex'=>'DVD',
+		'Service'=>'AWSECommerceService',
+		'Operation'=>'ItemSearch',
+		'ResponseGroup'=>'Medium',
+		'Keywords'=>_amazon_deutf8($artista." ".$titolo)
+	);
+	ksort($parametri);
+	$array_richiesta=array();
+	foreach($parametri as $parametro=>$valore)
+		$array_richiesta[]=_amazon_urlencode($parametro)."="._amazon_urlencode($valore);
+	$richiesta=implode('&',$array_richiesta);
+	$signature=urlencode(base64_encode(hash_hmac('sha256',"GET\nwebservices.amazon.it\n/onca/xml\n{$richiesta}",_AMAZON_SECRET,true)));
+	$x=@file_get_contents("http://webservices.amazon.it/onca/xml?{$richiesta}&Signature={$signature}");
+	$testo="Compra <i>$titolo</i> su Amazon";
+	if(preg_match("#<DetailPageURL>([^<]+)</DetailPageURL>#",$x,$a)){
+		$url=$a[1];
+		$prezzo=PHP_INT_MAX;
+		if(preg_match_all("#<Amount>([^<]+)</Amount>#",$x,$prezzi))
+			foreach($prezzi[1] as $p)
+				if($p<$prezzo&&$p>0)$prezzo=$p;
+		if($prezzo<PHP_INT_MAX)
+			$testo="<i>$titolo</i> in DVD da ".substr($prezzo,0,-2).",".substr($prezzo,-2)." euro";
+	}else
+		if(preg_match("#<MoreSearchResultsUrl>([^<]+)</MoreSearchResultsUrl>#",$x,$a))
+			$url=$a[1];
+		else
+			$url="http://www.amazon.it/Film-TV-DVD/s/?_encoding=UTF8&camp=3370&creative=24114&linkCode=ur2&page=1&rh=n%3A412606031%2Cp_n_binding_browse-bin%3A510329031&tag="._AMAZON_TAG;
+	return "<a href='$url' target='_blank'>$testo</a>";
+}

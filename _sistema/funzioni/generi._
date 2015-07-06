@@ -1,0 +1,17 @@
+<?php
+function nome_genere($a){
+	$nomi=array("Non classificato","Altro","Animazione","Avanguardia","Avventura/Azione","","Commedia","Drammatico","Romantico/Erotico","Horror","Sci-Fi","Storico","Thriller"
+);
+	return isset($nomi[$a])?$nomi[$a]:$nomi[0];
+}
+function url_genere($a){
+	$nomi=array("nessun_genere","altro","animazione","avanguardia","avventura-azione","","commedia","drammatico","romantico-erotico","horror","science-fiction","storico","thriller");
+	return isset($nomi[$a])?$nomi[$a]:$nomi[0];
+}
+function url_genere_to_id($a){
+	$nomi=array("nessun_genere","altro","animazione","avanguardia","avventura-azione","","commedia","drammatico","romantico-erotico","horror","science-fiction","storico","thriller");
+	return array_search($a,$nomi);
+}
+function coloregenere($genere){	$colori=array("gray","gray","orange","beige","beige","beige","green","red","violet","black","blue","beige","red");
+	return isset($colori[$genere])?$colori[$genere]:$colori[0];
+}

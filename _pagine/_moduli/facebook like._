@@ -1,0 +1,7 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea un mi piace relativo alla pagina e lo restituisce come stringa.
+
+*/
+$return='<div class="fb-like" data-href="http://www.storiadellamusica.it/'._URL.'" data-send="false" data-width="300" data-show-faces="false" data-font="arial"></div>';

@@ -1,0 +1,14 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/* Embed di un video in flash */
+if(!isset($titolo))$titolo="Trailer";
+if(!isset($flag))$flag=substr($titolo,0,1);
+M::carica(
+	M::modulo("box",array("flag"=>$flag,"titolo"=>$titolo,"class"=>"filmtrailer")),
+/*
+	'<object width="488" height="275">
+	<param name="movie" value="'.$swf.'"></param>
+	<param name="wmode" value="transparent"></param>
+	<embed type="application/x-shockwave-flash" src="'.$swf.'" allowFullScreen="true" width="488" height="275" wmode="transparent"></embed>
+	</object>');
+*/
+	"");

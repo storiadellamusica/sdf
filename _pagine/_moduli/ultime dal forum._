@@ -1,0 +1,19 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo per l'inserimento degli ultimi post dal forum
+	Accetta come parametri opzionali:
+	-	dove: un selettore TLAB per indicare in che punto inserirlo. Di default va nella terza colonna
+
+*/
+if(!isset($quanti))$quanti=10;
+M::carica(
+	M::carica(isset($dove)?$dove:_COLONNA3,'<h2>Ultime dal forum:</h2><div id="ultime_dal_forum"></div>'),
+	"SELECT phpbb_topics.topic_last_post_id,phpbb_topics.topic_title,phpbb_posts.poster_id,phpbb_users.username
+	FROM phpbb_topics
+	LEFT JOIN (phpbb_posts LEFT JOIN phpbb_users ON phpbb_users.user_id=phpbb_posts.poster_id) ON phpbb_topics.topic_last_post_id=phpbb_posts.post_id
+	WHERE
+		phpbb_topics.forum_id!=33
+	ORDER BY phpbb_topics.topic_last_post_id DESC
+	LIMIT $quanti",
+	'<a href="/forum/viewtopic.php?p={topic_last_post_id}#{topic_last_post_id}"><img src="{img,u,20,{poster_id}}" alt="">{s,{topic_title}}</a> di <a href="{linka,u{username}}">{s,{username}}</a>');

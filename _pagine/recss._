@@ -1,0 +1,5 @@
+<?php
+define("DEBUG",true);
+M::accendi();
+M::spegni();
+echo("ok");

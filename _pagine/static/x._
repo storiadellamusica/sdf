@@ -1,0 +1,7 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$f=db::query("SELECT img FROM sdml_artista WHERE url LIKE '$id'")->valore();
+if(empty($f))
+	$f=_ROOT."immagini_r".DS.db::query("SELECT sdmt_recensioni.img FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE sdml_artista.url LIKE '$id' AND sdmt_recensioni.active=1 ORDER BY sdmt_recensioni.Data DESC LIMIT 1")->valore().".jpg";
+else
+	$f=_ROOT."immagini_artisti".DS.$f;
+require "_imgproxy"._;

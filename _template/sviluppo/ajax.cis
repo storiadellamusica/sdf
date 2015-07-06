@@ -1,0 +1,6 @@
+!head|body/*{
+	ajax/vuoto
+}
+body{
+	ajax/base
+}

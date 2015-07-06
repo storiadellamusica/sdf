@@ -1,0 +1,280 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Interfaccia di accesso ad iTunes music store
+*/
+class itunes {
+
+	private $webService = "http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStoreServices.woa/wa/wsSearch?";
+  private $webServiceLookup = "http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStoreServices.woa/wa/wsLookup?id=";
+	private $media = "music";
+	private $entity;
+	private $term;
+	private $country = "it";
+	private $limit = 1;
+	private $searchFor = "term";
+	
+//	private $affiliateUrl = "http://clk.tradedoubler.com/click?p=24373&a=1842057&url=";
+	private $affiliateUrl = "";
+	private $ITMSalbumLink = "http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewAlbum?id=";
+	private $ITMSartistLink = "http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewArtist?id=";
+	
+	private $response;
+	
+	public $albumId = false;
+	
+	public $results = array();
+
+	function __construct() {
+		
+	}
+
+	function searchArtistByName($artist)
+	{
+		$this->term = urlencode($artist);
+		$this->entity = "musicArtist";
+		
+		$this->response = $this->startRequest();
+		if($this->response->resultCount>0) {
+			return $this->response->results[0];
+		} else {
+			return false;
+		}
+	}
+
+	function searchAlbumByName($artist, $album)
+	{
+		$this->term = urlencode($artist." ".$album);
+		$this->entity = "album";
+		
+		$this->response = $this->startRequest();
+		if($this->response->resultCount>0) {
+			$this->albumId = $this->response->results[0]->collectionId;
+			return $this->response->results[0];
+		} else {
+			return false;
+		}
+	}
+
+  function searchAlbumsByName($album)
+  {
+    $this->limit = 10;
+    $this->term = urlencode($album);
+    $this->entity = "album";
+    
+    $this->response = $this->startRequest();
+    if($this->response->resultCount>0) {
+      return $this->response->results;
+    } else {
+      return false;
+    }
+  }
+  
+  function getItemByID($ID) {
+    $this->term = $ID;
+    
+    $this->response = $this->startLookup();
+    //print_r($this->response);
+    if($this->response->resultCount>0) {
+      $this->albumId = $this->response->results[0]->collectionId;
+      return $this->response->results[0];
+    } else {
+      return false;
+    }
+  }
+	
+	function searchStoreByArtist($artist)
+	{
+		$this->term = urlencode($artist);
+		$this->entity = "album";
+		$this->limit = 20;
+		
+		$this->response = $this->startRequest();
+		if($this->response->resultCount>0) {
+			return $this->response->results;
+		} else {
+			return false;
+		}
+	}
+	
+	function searchSongByName($artist,$song)
+	{
+		$this->term = urlencode($album." ".$song);
+		$this->entity = "musicTrack";
+		
+		$this->response = $this->startRequest();
+		if($this->response->resultCount>0) {
+			return $this->response->results[0];
+		} else {
+			return false;
+		}
+	}
+  
+  function startLookup() {
+    $buildUrl = $this->webServiceLookup.$this->term;
+    $fp = fopen($buildUrl, 'r');
+    $content = '';
+      while ($l = fread($fp, 1024)) $content .= $l;
+      fclose($fp);
+      return json_decode($content);
+  }
+	
+	function startRequest() {
+		$buildUrl = $this->webService."media=".$this->media."&entity=".$this->entity."&".$this->searchFor."=".$this->term."&country=".$this->country."&limit=".$this->limit;
+		
+		$fp = fopen($buildUrl, 'r');
+		$content = '';
+    	while ($l = fread($fp, 1024)) $content .= $l;
+    	fclose($fp);
+    	$return=json_decode($content);
+    	foreach($return->results as $k=>$v)
+    		if(!isset($v->collectionId)||!isset($v->kind)||$v->kind!="song"){
+	    		unset($return->results[$k]);
+	    	}
+	    $return->results=array_merge($return->results);
+	    $return->resultCount=count($return->results);
+    	return $return;
+	}
+
+	function getArtistLink()
+	{
+		if($this->response->resultCount>0) {
+			return '<a href="'.$this->affiliateUrl.$this->ITMSartistLink.$this->response->results[0]->artistId.'&partnerId=2003" target="itunes_store" alt="'.$this->response->results[0]->artistName.'"><img src="http://www.storiadellamusica.it/iTunes_sm_bdg.png" /></a>';
+		} else {
+			return false;
+		}
+	}
+	
+	function getAlbumLink($icon="itunes")
+	{
+		if($this->response->resultCount>0) {
+			switch($icon) {
+				case "cart":
+					return '<a href="'.$this->affiliateUrl.$this->ITMSalbumLink.$this->response->results[0]->collectionId.'&partnerId=2003" target="itunes_store" alt="'.$this->response->results[0]->artistName.' - '.$this->response->results[0]->collectionName.'"><img src="http://www.storiadellamusica.it/cart.gif" /></a>';
+					break;
+				case "itunes":
+					return '<a href="'.$this->affiliateUrl.$this->ITMSalbumLink.$this->response->results[0]->collectionId.'&partnerId=2003" target="itunes_store" alt="'.$this->response->results[0]->artistName.' - '.$this->response->results[0]->collectionName.'"><img src="http://www.storiadellamusica.it/iTunes_sm_bdg.png" /></a>';
+					breaK;
+				case "text":
+					return '<a href="'.$this->affiliateUrl.$this->ITMSalbumLink.$this->response->results[0]->collectionId.'&partnerId=2003" target="itunes_store" alt="'.$this->response->results[0]->artistName.' - '.$this->response->results[0]->collectionName.'">iTunes Store</a>';
+					breaK;				
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	function getSongLinks()
+	{
+		if($this->response->resultCount>0) {
+			return '<a href="javascript:playTrack(\''.$this->response->results[0]->previewUrl.'\',this);"><img src="http://www.storiadellamusica.it/iconaPlay.gif" /></a><a href="'.$this->affiliateUrl.$this->ITMSalbumLink.$this->response->results[0]->collectionId.'&partnerId=2003" target="itunes_store" alt="'.$this->response->results[0]->artistName.' - '.$this->response->results[0]->collectionName.' - '.$this->response->results[0]->trackName.'"><img src="http://www.storiadellamusica.it/cart.gif" /></a>';
+		} else {
+			return false;
+		}
+	}
+
+	function getSongLinksFromDatas($datas)
+	{
+		if(isset($datas['itms_track_id'])) {
+			return '<a href="javascript:playTrack(\''.$datas['preview_url'].'\',this);"><img src="http://www.storiadellamusica.it/iconaPlay.gif" /></a><a href="'.$this->affiliateUrl.$this->ITMSalbumLink.$datas['itms_album_id'].'&partnerId=2003" target="itunes_store" alt="'.$datas['track'].'"><img src="http://www.storiadellamusica.it/cart.gif" /></a>';
+		} else {
+			return false;
+		}
+	}
+	
+	function getTracklist($album,$albumId)
+	{
+		$this->entity = "musicTrack";
+		$this->attribute = "albumTerm";
+		$this->term = urlencode($album);
+		$this->limit = 100;
+		
+		$this->response = $this->startRequest();
+		
+		if($this->response->resultCount>0) {
+			$tracks = array();
+		
+			foreach($this->response->results as $res) {
+				if($res->collectionId == $albumId) {
+					$tracks[$res->trackNumber] = $res->trackName;
+				}
+			}
+			
+			ksort($tracks);
+			
+			return array_values($tracks);
+		} else {
+			return false;
+		}		
+	}
+
+	function getFullTracklist($album,$albumId)
+	{
+		$this->entity = "musicTrack";
+		$this->attribute = "albumTerm";
+		$this->term = urlencode($album);
+		$this->limit = 150;
+		
+		$this->response = $this->startRequest();
+		
+		if($this->response->resultCount>0) {
+			$tracks = array();
+		
+			foreach($this->response->results as $res) {
+				if($res->collectionId == $albumId) {
+					$tracks[$res->trackNumber] = $res;
+				}
+			}
+			
+			ksort($tracks);
+			
+			return $tracks;
+		} else {
+			return false;
+		}		
+	}
+	
+	function getDiscographyFromArtistName($artist)
+	{
+		$this->term = urlencode($artist);
+		$this->entity = "album";
+		$this->limit = 200;
+		
+		$this->response = $this->startRequest();
+		
+		if($this->response->resultCount>0) {
+			$return = array();
+		
+			foreach($this->response->results as $res)
+			{
+				$return[md5($res->collectionName)] = array("year"=>substr($res->releaseDate,0,4), "title"=>$res->collectionName);
+			}
+			
+			return $return;
+		} else {
+			return false;
+		}	
+		var_dump($this->response);	
+	}
+	
+	function save($object, $object_id) {
+		if($this->response->resultCount>0) {
+			db_query("insert into itunes set object='".$object."', obj_id='".$object_id."', datas='".mysql_real_escape_string(serialize($this->response))."'");
+		}
+	}
+	
+	function load($object, $object_id) {
+		$get = db_get_var("select datas from itunes where object='".$object."' and obj_id='".$object_id."'");
+		if($get) {
+			$this->response = unserialize($get);
+			$this->albumId = $this->response->results[0]->collectionId;
+			return true;
+		} else {
+			return false;
+		}
+	}
+  
+  function unload($object, $object_id) {
+    db_query("delete from itunes where object='".$object."' and obj_id='".$object_id."'");
+  }
+
+}

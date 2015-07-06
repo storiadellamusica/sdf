@@ -1,0 +1,115 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo dei voti
+	Restituisce un array con i voti degli utenti
+	Richiede come parametri:
+	- sezione: la lettera che identifica la sezione (ad esempio "r" per recensioni)
+	- id: l'id numerico del contenuto
+	Accetta come parametri opzionali:
+	-	votiutenti: un array che contiene dei voti da visualizzare nei commenti con [id numerico utente]=>voto
+	- autore: l'id dell'utente che ha scritto il contenuto commentato
+	- autore2: l'id del secondo utente che ha scritto il contenuto commentato
+	- iscritti: le persone che seguono la discussione
+
+*/
+global $_UTENTE,$_DEFINIZIONI_VOTI;
+$ajax=false;
+/*! Salvataggio voti */
+if(isset($_POST["voto"])&&is_numeric($_POST["voto"])&&$_POST["voto"]>0&&$_POST["voto"]<=10&&$_UTENTE->id){
+	if(db::query("SELECT ID FROM sdmt_recensioni WHERE active=1 AND ID=$id")->valore()!=null){
+		if(!db::query("SELECT COUNT(*) FROM sdmt_voti_new WHERE ID_obj=$id AND ID_user={$_UTENTE->id}")->valore())
+			db::query("INSERT INTO sdmt_voti_new (value,ID_obj,ID_user) VALUES ({$_POST["voto"]},$id,{$_UTENTE->id})");
+	}
+	M::accendi("ajax","body/ajax");
+	$dove="body/ajax";
+	$ajax=true;
+}else{
+	M::carica(_CORPO,"<a name='voti'></a>");
+	$dove=M::modulo("box",array("flag"=>"V","titolo"=>"Voti","class"=>"tuttapagina voti_utenti","id"=>"boxvoti"));
+}
+if(defined("ANTEPRIMA")){
+	M::carica($dove,"<div>Voti disattivati nell'anteprima</div>");
+}else{
+	/*! Voti */
+	$voti=db::query("SELECT value,ID_user,username FROM sdmt_voti_new JOIN phpbb_users ON user_id=ID_user WHERE ID_user!=0 AND tipo='r' AND ID_obj=$id ORDER BY quando")->righe();
+	$tot=0;
+	$votiutenti=array();
+	$dettagliovoti="";
+	$numvoti=array_fill(1,10,0);
+	$bannati=explode(",",_CONFIG_VOTE_BAN_LIST);
+	foreach($voti as $k=>$voto){
+		$votiutenti[$voto["ID_user"]]=$voto["value"];
+		if(in_array($voto["ID_user"],$bannati)){
+			$dettagliovoti.='<div><a href="'.linka("u".$voto["username"]).'" style="color:#666;font-style:italic"><img src="'.img("u",25,$voto["ID_user"]).'"> '.$voto["username"].' (voto invalidato)</a> <span data-voto="'.$voto["value"].'"><strong>'.$voto["value"].'</strong>/10</span></div>';
+			unset($voti[$k]);
+		}else{
+			$tot+=$voto["value"];
+			$dettagliovoti.='<div><a href="'.linka("u".$voto["username"]).'"><img src="'.img("u",25,$voto["ID_user"]).'"> '.$voto["username"].'</a> <span data-voto="'.$voto["value"].'"><strong>'.$voto["value"].'</strong>/10</span></div>';
+			$numvoti[$voto["value"]]++;
+		}
+	}
+	$voto_medio=count($voti)?round($tot/count($voti)*10)/10:0;
+	$voto_medio_arrotondato=round($voto_medio*2)/2;
+	$voto_medio=str_replace(".",",",$voto_medio);
+	$spanvoti="";
+	$divvoti="";
+	$tabvoti="";
+	$tabbase=max($numvoti);
+	for($i=10;$i;$i--)
+		$tabvoti.="<tr><td>$i</td><td><div style='width:".($numvoti[$i]?400/$tabbase*$numvoti[$i]:0)."px'></div></td></tr>";
+	for($i=1;$i<11;$i++){
+		$spanvoti.="<span>&#9733;</span>";
+		$divvoti.="<div>{$_DEFINIZIONI_VOTI[$i]}&nbsp; <strong>$i</strong>/10</div>";
+	}
+	M::carica($dove,
+		($_UTENTE->id?"<div class='vota'><div id='stellevoto'>Il tuo voto: $spanvoti$divvoti</div></div>":"<div class='vota'><a href='/login.html?da=".urlencode(_URL."#voti")."'>Effettua l'accesso</a> o <a href='/registrati.html'>registrati</a> per votare.</div>").(count($voti)?"<div class='veditutti'>Voto degli utenti: <span data-voto='$voto_medio_arrotondato'><strong>$voto_medio</strong>/10</span> in media su ".count($voti)." vot".(count($voti)==1?"o":"i").".</div><div class='dettagliovoti'><table>$tabvoti</table>$dettagliovoti</div>":"<div>Nessuno ha ancora votato questo film. Fallo tu per primo!</div>"));
+	if($ajax)die;
+	if($_UTENTE->id){
+		$miovoto=db::query("SELECT value FROM sdmt_voti_new WHERE ID_user={$_UTENTE->id} AND tipo='r' AND ID_obj=$id")->valore();
+		if($miovoto==null)
+			M::carica(_SCRIPT,'$(function(){
+		var miovoto=0,
+			set_voto=function(id){
+				if(id){
+					$("#stellevoto span:lt("+id+")").addClass("hover");
+					$("#stellevoto span:gt("+(id-1)+")").removeClass("hover");
+					$("#stellevoto div").css({display:"none"}).eq(id-1).css({display:"block"});
+				}else{
+					$("#stellevoto span").removeClass("hover");
+					$("#stellevoto div").css({display:"none"});
+				}
+			};
+		$("#boxvoti").on("hover","#stellevoto span",function(){
+			set_voto($(this).index()+1);
+		}).on("click","#stellevoto span",function(){
+			var x=$(this).index()+1;
+			if(confirm("Sei sicuro di aver visto con calma questo film e di volerlo valutare "+x+"?\nNon potrai cambiare voto in un secondo momento."))
+				$.post("/'._URL.'",{voto:x},function(a){
+					var nascondi=$(".dettagliovoti").is(":hidden");
+					$("#boxvoti>div").html(a);
+					$(".dettagliovoti").css({width:$(".dettagliovoti").width()});
+					if(nascondi)$(".dettagliovoti").hide();
+					$("#stellevoto span").css({cursor:"default"});
+					miovoto=x;
+					set_voto(miovoto);
+					set_voto=function(){};
+					$("#boxvoti").off("click","#stellevoto span");
+				});
+		}).on("mouseleave","#stellevoto",function(){
+			set_voto(miovoto);
+		});
+		set_voto(miovoto);
+	});');
+		else
+			M::carica(_SCRIPT,'$(function(){
+		var set_voto=function(id){
+					$("#stellevoto span:lt("+id+")").addClass("hover");
+					$("#stellevoto span:gt("+(id-1)+")").removeClass("hover");
+					$("#stellevoto span").css({cursor:"default"});
+					$("#stellevoto div").eq(id-1).css({display:"block"});
+			};set_voto('.$miovoto.');
+		});');
+	}
+	$return=$votiutenti;
+}

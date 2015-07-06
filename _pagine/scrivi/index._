@@ -1,0 +1,20 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Scrivi");
+M::modulo("colonne standard");
+M::carica(M::modulo("box",array("flag"=>"R","titolo"=>"Recensioni")),"<p style='text-align:center'><a href='/sys/admin/new_recensione_bozza.php' class='bottone'>Scrivi una recensione</a></p>");
+$bozze=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='bozza' AND autore=".$_UTENTE->id)->valore();
+$in_attesa=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='proposto' AND autore=".$_UTENTE->id)->valore();
+$approvate=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='approvato' AND autore=".$_UTENTE->id)->valore();
+$pubblicate=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='pubblicato' AND autore=".$_UTENTE->id)->valore();
+$rifiutate=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='rifiutato' AND autore=".$_UTENTE->id)->valore();
+M::carica(M::modulo("box",array("flag"=>"N","titolo"=>"News","class"=>"contatti")),"<p>
+<div style='float:right'>
+<a href='/scrivi/news/bozze.html'>$bozze bozz".($bozze==1?"a":"e")."</a><br>
+<a href='/scrivi/news/in-attesa.html'>$in_attesa in attesa di approvazione</a><br>
+<a href='/scrivi/news/approvate.html'>$approvate approvate per la pubblicazione</a><br>
+<a href='/scrivi/news/pubblicate.html'>$pubblicate pubblicate</a><br>
+<a href='/scrivi/news/rifiutate.html'>$rifiutate rifiutate</a><br>&nbsp;</div><br>&nbsp; 
+&nbsp;&nbsp;<a href='/scrivi/news/nuova.html' class='bottone'>Scrivi una notizia</a></p>");
+M::carica(M::modulo("box",array("flag"=>"A","titolo"=>"Articoli")),"<p style='text-align:center'><a href='/sys/admin/new_articolo.php' class='bottone'>Scrivi un articolo</a></p>");
+M::carica(M::modulo("box",array("flag"=>"P","titolo"=>"Profilo")),"<p style='text-align:center'>Nome recensore: {$_UTENTE->recensore}<br><br><a href='#profilo' class='bottone disabled'>Modifica il tuo profilo recensore</a></p>");

@@ -1,0 +1,29 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*! Caricamento dati e inizializzazione */
+$id=end($_PARAMETRI);
+$dati=db::query("SELECT artista,biografia,ID AS id FROM sdml_artista WHERE url LIKE '$id'")->riga();
+if(!$dati)require _404;
+M::accendi("tre_colonne");
+M::modulo("colonne standard");
+M::modulo("speciali",array("sezione"=>"x","id"=>$dati["id"]));
+/*! Metadati e title */
+M::titolo("Filmografia {$dati["artista"]} - Film di {$dati["artista"]}");
+M::descrizione($dati["biografia"]);
+M::keyword($dati["artista"]);
+M::immagine(img("x",400,$id));
+/*! Video */
+$video="";
+foreach(db::query("SELECT youtube FROM sdmt_recensioni WHERE Artista={$dati["id"]}")->righe()as $v)
+	$video.=",".$v["youtube"];
+$video=explode(",",$video);
+foreach($video as $k=>$v)
+	if(empty($v))unset($video[$k]);
+if(count($video))M::modulo("youtube",array("video"=>$video,"dove"=>M::modulo("box",array("flag"=>"V","titolo"=>"Video","class"=>"video"))));
+/*! Descrizione artista */
+M::carica(M::modulo("box",array("flag"=>"A","titolo"=>$dati["artista"])),"<article class='corpo_artista'><h1>{$dati["artista"]}</h1><img src='".img("x",150,$id)."'>".riformatta($dati["biografia"]).(empty($dati["biografia"])?"<div class='nobio'>Non c'&egrave; ancora una biografia per <strong>{$dati["artista"]}</strong>.<br> Perch&eacute; non la scrivi tu?<br> <a href='/scrivi/biografia/$id' class='bottone'>Scrivi una biografia</a></div>":"")."<div class='clearfix'></div>".M::modulo("twitta").M::modulo("facebook like").'</article>');
+/*! Recensioni artista */
+if(db::query("SELECT COUNT(*) FROM sdmt_recensioni WHERE active=1 AND sdmt_recensioni.Artista={$dati["id"]}")->valore())
+	M::carica(
+		M::modulo("box",array("flag"=>"R","titolo"=>"Film di ".$dati["artista"],"class"=>"elencorecensioni")),
+		"SELECT sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_artista.Artista,sdmt_recensioni.voto,sdmt_recensioni.Titolo_Disco,sdml_etichetta.Etichetta,sdmt_recensioni.data_disco,sdmt_recensioni.Text,sdmt_recensioni.ID,sdmt_recensioni.url FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta WHERE active=1 AND sdmt_recensioni.Artista={$dati["id"]} ORDER BY data_disco",
+		'<a href="{linka,r{url}}"><img src="{img,r,135,{url}}" alt="{s,{Titolo_Disco}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{Titolo_Disco}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>di {s,{Artista}} ({s,{Etichetta}} {data_disco})</div></h1>{Text,250}</a>');

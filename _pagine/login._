@@ -1,0 +1,13 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+if(isset($_GET["ajax"])){
+	echo utente::login(deslash($_POST["nome"]),deslash($_POST["password"]))?1:0;
+	die;
+}
+if($_UTENTE->id||(isset($_POST["nome"])&&isset($_POST["password"])&&utente::login(deslash($_POST["nome"]),deslash($_POST["password"])))){
+		_MUORI(isset($_GET["da"])?$_GET["da"]:$_POST["da"]);
+	};
+M::accendi("tre_colonne");
+M::modulo("colonne standard");
+M::carica(M::modulo("box",array("flag"=>"L","titolo"=>"Login","class"=>"formlogin")),'<form action="/'._URL.'" method="post"><input type="hidden" name="da" value="'.(isset($_GET["da"])?$_GET["da"]:(isset($_POST["da"])?$_POST["da"]:"")).'"><div><label for="formlogin_nome">Nome o indirizzo e-mail:</label><input type="text" name="nome" id="formlogin_nome"></div><div><label for="formlogin_password">La tua password:</label><input type="password" name="password" id="formlogin_password"></div><input type="submit" class="bottone" value="Accedi"><input type="reset" class="bottone" value="Password?!" onclick="location.href=\'/recupera_password.html\';return false;"></form>');
+M::carica(M::modulo("box",array("flag"=>"R","titolo"=>"Registrati","class"=>"calltoregistrati")),'Non sei registrato? Bastano pochi secondi per avere accesso a tutto il mondo di Storia dei film. Cosa aspetti? <a href="/registrati.html">Registrati subito!</a>');
+M::carica(_SCRIPT,'$(window).load(function(){$("#formlogin_nome").focus();});');

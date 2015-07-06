@@ -1,0 +1,30 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+ini_set("memory_limit","128M");
+function _nopic(){
+	header("Location: /static/nopic/{$GLOBALS['altezza']}.jpg");
+	die;
+}
+if($altezza>1000)_nopic();
+if(!($x=@getimagesize($f)))_nopic();
+switch($x[2]){
+	case IMAGETYPE_JPEG:
+		$o=@imagecreatefromjpeg($f);
+		break;
+	case IMAGETYPE_GIF:
+		$o=@imagecreatefromgif($f);
+		break;
+	case IMAGETYPE_PNG:
+		$o=@imagecreatefrompng($f);
+		break;
+	default:
+		_nopic();
+}
+$l=$x[0];
+$a=$x[1];
+$larghezza=$l*$altezza/$a;
+$tmp=@imagecreatetruecolor($larghezza,$altezza);
+@imagefilledrectangle($tmp,0,0,$larghezza-1,$altezza-1,@imagecolorallocate($tmp,255,255,255));
+if(!@imagecopyresampled($tmp,$o,0,0,0,0,$larghezza,$altezza,$l,$a))_nopic();
+if(!file_exists($dest_dir))@mkdir($dest_dir);
+if(!@imagejpeg($tmp,$dest_dir.DIRECTORY_SEPARATOR.$id.".jpg"))_nopic();
+header("Location: /"._URL);

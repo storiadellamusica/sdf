@@ -1,0 +1,4 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$temp=unserialize(db::query("SELECT immagini FROM _sezione_news WHERE id='$id'")->valore());
+$f=_MEDIA."n".DS."400".DS.$temp[0]["i"].".jpg";
+require "_imgproxy"._;

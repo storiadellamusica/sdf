@@ -1,0 +1,15 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Trailer film - Scene film - Film Uscita");
+M::modulo("colonne standard");
+/*! Corpo principale */
+function prenota($prenotato,$id){
+	return $prenotato?"":'<div class="prenotarece">Andrai a vedere questo film? <a href="/prenota/'.$id.'" class="bottone small">prenota la recensione</a></div>';
+}
+/*!   Trailer */
+M::modulo("embed",array("flag"=>"P","titolo"=>"Prossimamente nei cinema","swf"=>"http://www.player.filmtrailer.com/v3.3/player.swf?file=http://it.player-feed.filmtrailer.com/v2.0/cinema/Next10InCinema/?channel_user_id=391100133-1&default_quality=xlarge&display_title=always&shuffle=true&volume=80&displayclick=play&enable_link=false&backcolor=ff6c00&frontcolor=ffffff"));
+/*!   Film in uscita */
+M::carica(
+	M::modulo("box",array("flag"=>"P","titolo"=>"Prossimamente nei cinema","class"=>"elencoprossimamente")),
+	"SELECT _cache.valore AS descrizione,(sdmt_bacheca.utente!=0) AS prenotato,sdmt_bacheca.id AS codice_prenotazione FROM _cache LEFT JOIN sdmt_bacheca ON sdmt_bacheca.imdb=_cache.id WHERE _cache.tipo='prossimamente al cinema'",
+	'<div>{descrizione}{prenota,{prenotato},{codice_prenotazione}}</div>');

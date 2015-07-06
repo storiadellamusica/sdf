@@ -1,0 +1,43 @@
+<?php
+$statici=array(
+"",
+"prossimamente-nei-cinema.html",
+"adesso-in-tv.html",
+"oggi-in-tv-prima-serata.html",
+"oggi-in-tv-seconda-serata.html",
+"recensioni/film-2000/",
+"recensioni/film-classici/",
+"recensioni/",
+"articoli/",
+"artisti/",
+"classifiche/",
+"forum/",
+"collegamenti.html",
+"contatti.html",
+"altro/",
+"animazione/",
+"avanguardia/",
+"avventura/",
+"azione/",
+"commedia/",
+"drammatico/",
+"erotico/",
+"horror/",
+"science-fiction/",
+"storico/",
+"thriller/"
+);
+$dinamici=array(
+"SELECT CONCAT(url,'.html') FROM sdmt_recensioni WHERE active=1",
+"SELECT CONCAT('articoli/',url,'.html') FROM sdmt_articoli WHERE active=1",
+"SELECT CONCAT('artisti/',url,'.html') FROM sdml_artista"
+);
+header("Content-Type: text/xml;charset=utf-8");
+echo("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.google.com/schemas/sitemap/0.84\">");
+$data=date("Y-m-d");
+foreach($statici as $url)
+	echo("\n<url><loc>http://www.storiadellamusica.it/$url</loc><lastmod>$data</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>");
+foreach($dinamici as $query)
+	foreach(db::query($query)->valori()as $url)
+		echo("\n<url><loc>http://www.storiadellamusica.it/$url</loc><lastmod>$data</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>");
+echo("\n</urlset>");

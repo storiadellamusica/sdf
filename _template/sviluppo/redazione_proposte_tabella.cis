@@ -1,0 +1,9 @@
+<body/script[last()]{
+	redazione/proposte/script_tabelle
+}
+head{
+	redazione/proposte/stili_tabelle
+}
+>body/div[@role="main"]/nav{
+	redazione/proposte/tabella
+}

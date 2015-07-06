@@ -1,0 +1,26 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/* Classe d'interfaccia con le API filmtrailer.com, riscritta e migliorata */
+
+class filmtrailer{
+	const partner_id="391100133-1";
+	
+	static function getNext($num){
+		return @simplexml_load_file("http://it.feed.filmtrailer.com/v2.0/?ListType=Next".$num."InCinema&channel_user_id=".self::partner_id);
+	}
+	static function getLatest($num){
+		return @simplexml_load_file("http://it.feed.filmtrailer.com/v2.0/?ListType=Latest".$num."InCinema&channel_user_id=".self::partner_id);
+	}
+	static function latestVals($num,$chiave){
+		if(!($xml=self::getLatest($num)))return false;
+		$return=array();
+		foreach($xml->movies->movie as $film)
+			$return[]=(string)$film[$chiave];
+		return $return;
+	}
+	static function latestFilmIDs($num){
+		return self::latestVals($num,"movie_id");
+	}
+	static function latestFilmImdbIDs($num) {
+		return self::latestVals($num,"imdb_id");
+	}
+}

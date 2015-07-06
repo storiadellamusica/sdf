@@ -1,0 +1,56 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::modulo("estrai numero pagina");
+switch(count($_PARAMETRI)){
+case 0:
+	if($_PAGINA=="recensioni"){
+		$titolo="Ultime recensioni pubblicate";
+		$criterio="active=1";
+		require "_elenco_recensioni"._;
+	}else{
+		$genere=url_genere_to_id($_PAGINA);
+		if(!$genere)require _404;
+		$titolo="Recensioni ".nome_genere($genere);
+		$criterio="Genere1 IN (SELECT ID FROM sdml_generi WHERE sezione_id=$genere)";
+		require "_elenco_recensioni"._;
+	}
+	break;
+case 1:
+	if($_PAGINA=="recensioni"){
+		if($_PARAMETRI[0]=='film-2000'){
+			$titolo="Recensioni film anni 2000";
+			$criterio="data_disco>1999";
+			require "_elenco_recensioni"._;
+		}elseif($_PARAMETRI[0]=='film-classici'){
+			$titolo="Recensioni film classici";
+			$criterio="data_disco<2000";
+			require "_elenco_recensioni"._;
+		}elseif(is_numeric($_PARAMETRI[0])){
+			$titolo="Recensioni ".$_PARAMETRI[0];
+			$criterio="data_disco=".$_PARAMETRI[0];
+			require "_elenco_recensioni"._;
+		}else
+			require _404;
+	}else{
+		$padre=url_genere_to_id($_PAGINA);
+		if(!$padre)require _404;
+		list($genere,$nomegenere)=db::query("SELECT ID,Genere FROM sdml_generi WHERE url='{$_PARAMETRI[0]}' AND sezione_id=$padre")->rigaN();
+		if(!$genere)
+			if($padre=db::query("SELECT sezione_id FROM sdml_generi WHERE url='{$_PARAMETRI[0]}'")->valore())
+				_MUORI(url_genere($padre)."/{$_PARAMETRI[0]}.html");
+			else
+				require _404;
+			$titolo="Recensioni $nomegenere";
+			$criterio="(Genere1=$genere OR Genere2=$genere OR Genere3=$genere)";
+			require "_elenco_recensioni"._;
+	}
+	break;
+case 2:
+	if(is_numeric($_PARAMETRI[1])&&$_PARAMETRI[0]=="di"&&$nome=db::query("SELECT username FROM phpbb_users WHERE user_id={$_PARAMETRI[1]}")->valore()){
+		$titolo="Recensioni di $nome";
+		$criterio="(Recensore IN (SELECT ID FROM sdml_recensore WHERE ID_user={$_PARAMETRI[1]}) OR Recensore2 IN (SELECT ID FROM sdml_recensore WHERE ID_user={$_PARAMETRI[1]}))";
+		require "_elenco_recensioni"._;
+		break;
+	}
+default:
+	require "_recensione_singola"._;
+}

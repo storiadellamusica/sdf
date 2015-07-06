@@ -1,0 +1,27 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Seconda e terza colonna standar per riempire le pagine secondarie
+
+*/
+/*! Seconda colonna */
+/*! 	Ken Burns articoli */
+M::modulo("kenburns articoli");
+/*! 	In evidenza */
+M::carica(
+	M::carica(_COLONNA2,'<h2>In evidenza:</h2><div class="elencorecensioni"></div>'),
+	"SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE active=1 AND sdmt_recensioni.ID=(SELECT MAX(recensione) FROM _goldies_automatici)",
+	'<a href="{linka,r{url}}"><img src="{img,r,50,{url}}" alt="{s,{Titolo_Disco}}"><strong>{s,{Titolo_Disco}}</strong> {s,{Artista}}</a>');
+/*! 	Ultime recensioni */
+M::modulo("ultime recensioni");
+/*! Terza colonna  */
+/*! 	Ken Burns news */
+M::modulo("kenburns news");
+/*! 	Bottoni invia, facebook, rss... */
+M::modulo("call to action");
+/*! 	Ken Burns news */
+M::modulo("kenburns speciali");
+/*! 	Ultimi commenti */
+M::modulo("ultimi commenti");
+/*! 	Ultime dal forum */
+M::modulo("ultime dal forum",array("quanti"=>7));

@@ -1,0 +1,16 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea un box per i contenuti. Utilizza i seguenti parametri:
+	- flag è la lettera in evidenza che identifica graficamente il box
+	- titolo è il titolo del box
+	- id è un id opzionale da dare al box
+	- class sono delle classi aggiuntive opzionali separate da spazio da dare al box
+	-	dove: un selettore TLAB opzionale, viene di default inserito nel corpo principale
+	Restituisce il nodo in cui inserire il contenuto del box.
+
+*/
+$return=M::carica(
+	isset($dove)?$dove:_CORPO,
+	'<div'.(isset($id)?' id="'.$id.'"':"").' class="box'.(isset($class)?' '.$class:"").'"><h2><span class="flagarancio">'.@substr($flag,0,1).'</span> '.$titolo.'</h2><div></div></div>'
+	)->lastChild;

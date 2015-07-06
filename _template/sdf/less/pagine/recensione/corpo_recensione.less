@@ -1,0 +1,53 @@
+.corpo_recensione{
+	padding: 5px 15px;
+	font-size: 14px;
+	line-height: 1.2;
+	h1{
+		margin: 10px 0 5px 0;
+		font-size: 18px;
+		color: @colore_b;
+		em{
+			color: @testo;
+			display: block;
+			font-style: normal;
+			font-size: 0.8em;
+		}
+		a{
+			color: @colore_a;
+		}
+	}
+	.autore{
+		margin-bottom: 8px;
+		a{
+			font-weight: bold;
+			color: @colore_a;
+		}
+	}
+	[data-voto]{
+		float: right;
+		margin-top: 15px;
+		font-size: 14px;
+		strong{
+			font-size: 25px;
+		}
+	}
+	p{
+		text-align: justify;
+		margin: 5px 0;
+		text-indent:5px;
+	}
+	iframe{
+		margin-top: 8px;
+	}
+	>iframe{
+		width: 125px !important;
+		overflow: hidden;
+	}
+	.trama{
+		font-style: italic;
+		color: @colore_a;
+	}
+	.spoiler{
+		display: none;
+	}
+}

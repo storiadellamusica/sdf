@@ -1,0 +1,13 @@
+<?php
+$_DEFINIZIONI_VOTI=array(
+10=>"Capolavoro",
+9=>"Eccezionale",
+8=>"Molto Buono",
+7=>"Discreto",
+6=>"Sufficiente",
+5=>"Mediocre",
+4=>"Brutto",
+3=>"Indegno",
+2=>"Infimo",
+1=>"Atroce"
+);

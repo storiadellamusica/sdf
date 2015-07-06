@@ -1,0 +1,92 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*! Caricamento dati e inizializzazione */
+if($_PARAMETRI[0]=="anteprima")define("ANTEPRIMA",true);
+if($_PARAMETRI[0]=="minianteprima")define("ANTEPRIMA",true);
+$id=end($_PARAMETRI);
+$dati=db::query("SELECT
+sdmt_articoli.ID AS id,
+sdmt_articoli.Articolo AS articolo_padre,
+sdmt_articoli.Titolo AS titolo,
+sdmt_articoli.Text AS testo,
+sdml_recensore.ID_user AS id_autore,
+sdmt_articoli.Recensore AS id_autore_alias,
+sdml_recensore.Recensore AS nome_autore,
+phpbb_users.username AS nick_autore,
+sdml_recensore2.ID_user AS id_autore2,
+sdmt_articoli.Recensore2 AS id_autore2_alias,
+sdml_recensore2.Recensore AS nome_autore2,
+phpbb_users2.username AS nick_autore2,
+sdmt_articoli.Mailto AS iscritti,
+sdmt_articoli.kws AS keywords,
+sdmt_articoli.Link AS link,
+sdmt_articoli.Data AS data,
+sdml_artista.Artista AS artista,
+sdmt_articoli.Artista AS id_artista
+FROM sdmt_articoli
+LEFT JOIN sdml_artista ON sdml_artista.ID=sdmt_articoli.Artista
+LEFT JOIN sdml_recensore ON sdml_recensore.ID=sdmt_articoli.Recensore LEFT JOIN phpbb_users ON sdml_recensore.ID_user=phpbb_users.user_id
+LEFT JOIN sdml_recensore AS sdml_recensore2 ON sdml_recensore2.ID=sdmt_articoli.Recensore2 LEFT JOIN phpbb_users AS phpbb_users2 ON sdml_recensore2.ID_user=phpbb_users2.user_id
+WHERE ".(defined("ANTEPRIMA")?"sdmt_articoli.ID=$id":"sdmt_articoli.active=1 AND sdmt_articoli.url='$id'"))->riga();
+if(!$dati)require _404;
+$pag=explode("§",$dati["testo"]);
+$pagine_totali=count($pag);
+if($_NUMERO_PAGINA>$pagine_totali)require _404;
+M::accendi("tre_colonne");
+/*! Speciali */
+M::modulo("speciali",array("sezione"=>"a","id"=>$dati["id"]));
+if($dati["articolo_padre"])M::modulo("speciali",array("sezione"=>"a","id"=>$dati["articolo_padre"]));
+if($dati["id_artista"])M::modulo("speciali",array("sezione"=>"x","id"=>$dati["id_artista"]));
+/*! Metadati e title */
+$titolo=$dati["titolo"].($pagine_totali>1?" - pagina $_NUMERO_PAGINA di ".$pagine_totali:"");
+M::titolo($titolo);
+M::descrizione($dati["testo"]);
+M::keyword($dati["keywords"]);
+M::immagine(img("a",400,$id));
+/*! Video */
+if(preg_match($_REGEX_YOUTUBE,$dati["link"],$idvideo)){
+	M::modulo("youtube",array("video"=>$idvideo,"dove"=>M::modulo("box",array("flag"=>"V","titolo"=>"Video","class"=>"video"))));
+	$dati["link"]="";
+}
+/*! Articolo padre */
+if($dati["articolo_padre"])
+	M::carica(
+		M::modulo("box",array("flag"=>"A","titolo"=>"Articolo principale","class"=>"elencoarticoli")),
+		"SELECT url,Titolo,Text FROM sdmt_articoli WHERE ID='{$dati["articolo_padre"]}'",
+		'<a href="{linka,a{url}}"><img src="{img,a,90,{url}}" alt="{s,{Titolo}}"><h1>{s,{Titolo}}</h1>{Text,200}</a>');
+/*! Articolo */
+$contenitore=M::carica(M::modulo("box",array("flag"=>"A","titolo"=>$titolo)),"<article class='corpo_articolo'><h1>{$dati["titolo"]}".($pagine_totali<2?"":" ($_NUMERO_PAGINA/$pagine_totali)")."</h1><div class='autore'>di <a href='".linka("u".$dati["nick_autore"])."'>{$dati["nome_autore"]}</a>".(empty($dati["id_autore2"])?"":" e <a href='".linka("u".$dati["nick_autore2"])."'>{$dati["nome_autore2"]}</a>")."</div><img src='".(defined("ANTEPRIMA")?imga("a",$id):img("a",250,$id))."'>".riformatta($pag[$_NUMERO_PAGINA-1]).'</article>'.(empty($dati["link"])?"":'<p class="approfondimento">Per approfondire: <a href="'.$dati["link"].' target="_blank">'.$dati["link"].'</a></p>'));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica($contenitore,"<div class='clearfix'></div>".M::modulo("twitta").M::modulo("facebook like"));
+/*! Articoli allegati */
+if(db::query("SELECT COUNT(*) FROM sdmt_articoli WHERE active=1 AND Articolo='{$dati["id"]}'")->valore())
+	M::carica(
+		M::modulo("box",array("flag"=>"A","titolo"=>"Articoli","class"=>"elencoarticoli elencocollassabile")),
+		"SELECT url,Titolo,Text FROM sdmt_articoli WHERE active=1 AND Articolo='{$dati["id"]}' ORDER BY data",
+		'<a href="{linka,a{url}}"><img src="{img,a,90,{url}}" alt="{s,{Titolo}}"><h1>{s,{Titolo}}</h1>{Text,200}</a>');
+/*! Recensioni allegate */
+if(db::query("SELECT COUNT(*) FROM sdmt_recensioni WHERE active=1 AND Articolo='{$dati["id"]}'")->valore())
+	M::carica(
+		M::modulo("box",array("flag"=>"R","titolo"=>"Recensioni","class"=>"elencorecensioni elencocollassabile")),
+		"SELECT sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS casa,sdml_artista.Artista,sdmt_recensioni.voto,sdmt_recensioni.Titolo_Disco,sdmt_recensioni.Etichetta,sdmt_recensioni.data_disco,sdmt_recensioni.Text,sdmt_recensioni.ID,sdmt_recensioni.url FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta WHERE active=1 AND Articolo='{$dati["id"]}' ORDER BY Data DESC, ID DESC",
+		'<a href="{linka,r{url}}"><img src="{img,r,135,{url}}" alt="{s,{Titolo_Disco}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{Titolo_Disco}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>di {s,{Artista}} ({s,{casa}} {data_disco})</div></h1>{Text,180}</a>');
+/*! Terza colonna */
+M::modulo("kenburns articoli",array("dove"=>_COLONNA3));
+M::modulo("call to action");
+M::modulo("box facebook");
+/*! Di questo artista */
+$discografia=db::query("SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista FROM sdmt_recensioni JOIN sdml_artista ON sdml_artista.ID=sdmt_recensioni.Artista WHERE sdmt_recensioni.active=1 AND sdmt_recensioni.Artista={$dati["id_artista"]} ORDER BY data_disco LIMIT 10")->righe();
+if($discografia){
+	$tmp="";
+	foreach($discografia as $d)
+		$tmp.='<a href="'.linka("r".$d["url"]).'"><img src="'.img("r",25,$d["url"]).'"><strong>'.$d["Artista"].'</strong> '.$d["Titolo_Disco"].'</a>';
+	M::carica(_COLONNA3,"<h2>Di questo artista:</h2><div class='dellostessoartista'>$tmp</div>");
+}
+/*! Dello stesso autore */
+M::modulo("dello stesso autore",array("autore"=>$dati["id_autore_alias"],"nome"=>$dati["nome_autore"]));
+if(!empty($dati["id_autore2"]))M::modulo("dello stesso autore",array("autore"=>$dati["id_autore2_alias"],"nome"=>$dati["nome_autore2"]));
+/*! Potrebbero interessarti */
+M::carica(M::carica(_COLONNA2,'<h2>Potrebbero interessarti:</h2><div class="elencorecensioni"></div>'),
+	M::modulo("collegati",array("id"=>$dati["id"],"keywords"=>$dati["artista"].",".$dati["titolo"].",".str_replace(", ",",",$dati["keywords"])))
+	);
+/*! Commenti */
+M::modulo("commenti",array("sezione"=>"a","id"=>$dati["id"],"autore"=>$dati["id_autore"],"autore2"=>$dati["id_autore2"],"iscritti"=>$dati["iscritti"],"titolo"=>$dati["titolo"]));

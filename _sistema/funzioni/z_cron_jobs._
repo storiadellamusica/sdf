@@ -1,0 +1,96 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	
+	Routine di manutenzione eseguire periodicamente
+	Vedi la tabella _cron_jobs
+	
+*/
+
+function _cron_add_goldies(){
+	$d=new db;
+	$g=$d->query("SELECT ID FROM sdmt_recensioni WHERE ID NOT IN(SELECT recensione FROM _goldies_automatici) AND tipo='film' AND voto>=8 AND active=1 AND NOW()>DATE_ADD(data,interval 4 month) ORDER BY RAND() LIMIT 1")->valore();
+	$d->query("INSERT INTO _goldies_automatici (recensione)VALUES($g)");
+}
+
+function _cron_url_generi(){
+	$d=new db;
+	foreach($d->query("SELECT ID,Genere FROM sdml_generi WHERE url=''")->righe()as $a)
+	 	$d->query("UPDATE sdml_generi SET url='".urlizza($a["Genere"])."' WHERE ID=".$a["ID"]);
+}
+
+function _cron_pubblicazione_programmata_addslashes(&$a){
+	$a=addslashes($a);
+}
+function _cron_pubblicazione_programmata(){
+	db::query("UPDATE sdmt_recensioni SET active=1 WHERE active=2 AND tipo='film' AND Data<NOW()");
+	db::query("UPDATE sdmt_articoli SET active=1 WHERE active=2 AND Data<NOW()");
+	foreach(db::query("SELECT sdmt_recensioni.*,sdml_etichetta.Etichetta AS nomeproduttore,sdml_generi.sezione_id AS sezione FROM sdmt_recensioni JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdmt_recensioni.Etichetta=sdml_etichetta.ID WHERE tipo='serie' AND (active=2 OR active=1) AND Data<NOW()")->righe()as $riga){
+		@array_walk($riga,"_cron_pubblicazione_programmata_addslashes");
+		$riga["titolo"]=$riga["Titolo_Disco"];
+		$riga["data_recensione"]=$riga["Data"];
+		$riga["produttore"]=$riga["Etichetta"];
+		$riga["anno"]=$riga["data_disco"];
+		$riga["genere1"]=$riga["Genere1"];
+		$riga["genere2"]=$riga["Genere2"];
+		$riga["genere3"]=$riga["Genere3"];
+		$riga["testo"]=$riga["Text"];
+		$riga["recensore"]=$riga["Recensore"];
+		$riga["recensore2"]=$riga["Recensore2"];
+		$riga["stato"]="pubblicato";
+		$riga["url"]=url_genere($riga["sezione"])."/".urlizza($riga["titolo"])."(".urlizza($riga["nomeproduttore"]).(empty($riga["nomeproduttore"])?"":"-").$riga["anno"].")";
+		$id=db::query("INSERT INTO _sezione_serietv (url,titolo,data_recensione,anno,produttore,genere1,genere2,genere3,testo,voto,kws,Recensore,Recensore2,mailto,imdb,plot,youtube,stato)VALUES('{$riga["url"]}','{$riga["titolo"]}','{$riga["data_recensione"]}','{$riga["anno"]}','{$riga["produttore"]}','{$riga["genere1"]}','{$riga["genere2"]}','{$riga["genere3"]}','{$riga["testo"]}','{$riga["voto"]}','{$riga["kws"]}','{$riga["recensore"]}','{$riga["recensore2"]}','{$riga["mailto"]}','{$riga["imdb"]}','{$riga["plot"]}','{$riga["youtube"]}','{$riga["stato"]}')")->id();
+		copy(_ROOT."immagini_r".DS.$riga["img"].".jpg",_MEDIA."t".DS."originali".DS."$id.jpg");
+		db::query("UPDATE sdmt_recensioni SET active=9 WHERE ID={$riga["ID"]}");
+	}
+}
+
+function _cron_prossimamente(){  // Gestisce anche l'inserimento in bacheca delle novità
+	if($film=filmtrailer::getNext(10)){
+		db::query("DELETE FROM _cache WHERE tipo='prossimamente al cinema'");
+		foreach($film->movies->movie as $f){
+			if(!$imdb=$f["imdb_id"])continue;
+			if(!$id=db::query("SELECT id FROM sdmt_bacheca WHERE imdb='$imdb'")->valore())
+				$id=db::query("INSERT INTO sdmt_bacheca SET tipo='nuove',stato=1,titolo='".addslashes($f->regions->region->products->product->product_title)."',anno='".$f->production_year."', descrizione='".addslashes($f->regions->region->products->product->description)."',uscita='".$f->regions->region->products->product->premiere."',imdb='$imdb',ftid='".$f['movie_id']."', label='".addslashes($f->regions->region->products->product->distributors->distributor)."'")->id();
+			$descrizione=addslashes("<img src='".$f->regions->region->pictures->picture->url."' alt=''><h1>".$f->regions->region->products->product->product_title."<div>di ".$f->directors->director." (".$f->regions->region->products->product->distributors->distributor.", ".$f->production_year.")".($f->regions->region->products->product->premiere!='1970-01-01'?" <em>nelle sale dal ".(substr($f->regions->region->products->product->premiere,-2)+0)." ".$GLOBALS["nomi_mesi"][0+substr($f->regions->region->products->product->premiere,5,2)]."</em>":"")."</div></h1>".anteprimaTesto($f->regions->region->products->product->description));
+			db::query("INSERT INTO _cache (tipo,id,valore) VALUES ('prossimamente al cinema','$imdb','$descrizione')");
+		}
+	}
+}
+function _cron_ultimi_film_usciti(){
+	db::query("DELETE FROM _cache WHERE tipo='ultimi film usciti'");
+	foreach(filmtrailer::latestFilmImdbIDs(10)as $imdb)
+		if($imdb)db::query("INSERT INTO _cache (tipo,id) VALUES ('ultimi film usciti','$imdb')");
+}
+function _cron_url_artisti(){
+	$d=new db;
+	foreach($d->query("SELECT ID,Artista FROM sdml_artista WHERE url=''")->righe()as $a)
+	 	$d->query("UPDATE sdml_artista SET url='".urlizza($a["Artista"])."' WHERE ID=".$a["ID"]);
+}
+function _cron_url_articoli(){
+	$d=new db;
+	foreach($d->query("SELECT ID,Titolo FROM sdmt_articoli WHERE active=1 AND url=''")->righe()as $a)
+	 	$d->query("UPDATE sdmt_articoli SET url='".urlizza($a["Titolo"])."' WHERE ID=".$a["ID"]);
+}
+function _cron_url_recensioni(){
+	$d=new db;
+	foreach($d->query("SELECT sdml_generi.Genere,sdml_generi.sezione_id,sdmt_recensioni.ID,data_disco AS Anno,sdml_etichetta.Etichetta,Titolo_Disco AS Titolo,sdml_artista.Artista AS Artista FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdmt_recensioni.Etichetta=sdml_etichetta.ID WHERE sdmt_recensioni.tipo='film' AND sdmt_recensioni.active=1 AND sdmt_recensioni.url='' AND sdmt_recensioni.Genere1!=0")->righe()as $a)
+		$d->query("UPDATE sdmt_recensioni SET url='".url_genere($a["sezione_id"])."/".urlizza($a["Genere"])."/".urlizza($a["Artista"])."-".urlizza($a["Titolo"])."(".urlizza($a["Etichetta"]).(empty($a["Etichetta"])?"":"-").$a["Anno"].")"."' WHERE ID=".$a["ID"]);
+}
+
+if(!count($_POST)&&db::query("SELECT COUNT(*) FROM _cron_jobs WHERE lastrun<NOW()")->valore()){
+	$todo=db::query("SELECT job FROM _cron_jobs WHERE lastrun<NOW()")->valori();
+	foreach($todo as $funzione)
+		db::query("UPDATE _cron_jobs SET lastrun=ADDTIME(NOW(),SEC_TO_TIME(frequenza)) WHERE job='$funzione'");
+	set_time_limit(0);
+	ignore_user_abort(true);
+	header("Content-Length: 0");
+	header('Connection: close');
+	header('Location: /'._URL);
+	ob_end_flush();
+	ob_flush();
+	flush();
+	session_write_close();
+	foreach($todo as $funzione)
+		call_user_func("_cron_$funzione");
+	die;
+}

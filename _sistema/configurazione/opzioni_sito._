@@ -1,0 +1,10 @@
+<?php
+define("_DEFAULT_TITOLO","Recensioni film - Classifiche film - Trame Film - Storiadeifilm.it");
+define("_DEFAULT_SUFFISSO_TITOLO"," - storiadeifilm.it");
+define("_DEFAULT_DESCRIZIONE","Storia dei film: l'unico sito che ti permette di leggere le recensioni, votarle e discuterle scoprendo legami sempre nuovi film tra film, attori e registi !");
+define("_DEFAULT_KEYWORDS","storia cinema, storia film ");
+define("_DEFAULT_IMMAGINE","img/storia_dei_film.jpg");
+define("_FB_ADMINS","100000446105021");
+
+define("_CONFIG_VOTE_BAN_LIST","5174");
+define("_CONFIG_VOTE_SUPER_LIST","");

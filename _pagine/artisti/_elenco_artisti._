@@ -1,0 +1,15 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("ARTISTI_PER_PAGINA",11);
+$totali=db::query("SELECT COUNT(*) FROM sdml_artista")->valore();
+$pagine_totali=ceil($totali/ARTISTI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="Tutti gli artisti (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"A","titolo"=>$titolo,"class"=>"elencoartisti"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+	"SELECT url,Artista AS nome,biografia FROM sdml_artista ORDER BY url LIMIT ".(($_NUMERO_PAGINA-1)*ARTISTI_PER_PAGINA).",".ARTISTI_PER_PAGINA,
+	'<a href="{linka,x{url}}"><img src="{img,x,90,{url}}" alt="{s,{nome}}"><h1>{s,{nome}}</h1>{biografia,200}</a>');

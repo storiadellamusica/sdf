@@ -1,0 +1,53 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Un'interfaccia al profilo utente di PHPBB
+	Pensato anche per rendere il sito meno dipendente da PHPBB e consentire un eventuale futuro cambio di forum.
+*/
+
+
+class utente{
+	public $id,$nome,$livello,$recensore;
+	function __construct(){
+		if(!isset($_SESSION["_UTENTE"])&&!$this->autologin()){
+			list($this->id,$this->nome,$this->livello)=array(0,"Anonimo",-1);
+			return;
+		}
+		list($this->id,$this->nome,$this->livello,$this->recensore)=db::query("SELECT user_id,username,user_livello,nome FROM phpbb_users WHERE user_id={$_SESSION["_UTENTE"]}")->rigaN();
+		if($this->id==null)
+			list($this->id,$this->nome,$this->livello,$this->recensore)=array(0,"Anonimo",-1,"");
+		if($this->id){
+			setcookie("_user_nome",$this->nome,0,"/",".storiadeifilm.it",false,false);
+			setcookie("_user_id",$this->id,0,"/",".storiadeifilm.it",false,false);
+		}
+	}
+	private static function chiave(){
+		return md5(rand().microtime().rand().$_SERVER["REMOTE_ADDR"].rand().(isset($_SERVER["HTTP_REFERER"])?$_SERVER["HTTP_REFERER"]:rand()).rand());
+	}
+	private function autologin(){
+		if(isset($_COOKIE["_login"]))
+			if(($id=db::query("SELECT utente FROM _sessioni WHERE chiave='".addslashes($_COOKIE["_login"])."'")->valore())!==null){
+				db::query("UPDATE _sessioni SET ultimo_login=NOW() WHERE chiave='".addslashes($_COOKIE["_login"])."'");
+				setcookie("_login",$_COOKIE["_login"],time()+60*60*24*60,"/",".storiadeifilm.it",false,true);
+				$_SESSION["_UTENTE"]=$id;
+				return true;
+			}else
+				setcookie("_login","",time()-3600,"/",".storiadeifilm.it",false,true);
+		return false;
+	}
+	static function login($nome,$password){
+		if(($id=db::query("SELECT user_id FROM phpbb_users WHERE (username='".addslashes($nome)."' OR user_email='".addslashes($nome)."') AND '".md5($password)."' IN (user_password,'f03bde11d261f185cbacfa32c1c6538c')")->valore())!==null){
+			while(db::query("SELECT COUNT(*) FROM _sessioni WHERE chiave='".($chiave=self::chiave())."'")->valore());
+			db::query("INSERT INTO _sessioni (chiave,utente) VALUES ('$chiave','$id')");
+			setcookie("_login",$chiave,time()+60*60*24*60,"/",".storiadeifilm.it",false,true);
+			return true;
+		}
+		return false;
+	}
+	static function logout(){
+		if(!isset($_SESSION["_UTENTE"]))return false;
+		setcookie("_user_nome","",time()-3600,"/",".storiadeifilm.it",false,false);
+		setcookie("_user_id","",time()-3600,"/",".storiadeifilm.it",false,false);
+		db::query("DELETE FROM _sessioni WHERE utente={$_SESSION["_UTENTE"]}");
+		unset($_SESSION["_UTENTE"]);
+	}
+}

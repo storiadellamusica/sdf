@@ -1,0 +1,94 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo dei commenti
+	Richiede come parametri:
+	- sezione: la lettera che identifica la sezione (ad esempio "r" per recensioni)
+	- id: l'id numerico del contenuto
+	Accetta come parametri opzionali:
+	-	votiutenti: un array che contiene dei voti da visualizzare nei commenti con [id numerico utente]=>voto
+	- autore: l'id dell'utente che ha scritto il contenuto commentato
+	- autore2: l'id del secondo utente che ha scritto il contenuto commentato
+	- iscritti: le persone che seguono la discussione
+
+*/
+if(isset($_POST["cancella_commento"])&&_LIVELLO(_CAPOREDATTORE)){
+	function cancellacommenti($id){
+		foreach(DB::query("SELECT ID FROM sdmt_comments WHERE ID_response='$id'")->valori()as $a)
+			cancellacommenti($a);
+		DB::query("DELETE FROM sdmt_comments WHERE ID='$id'");
+	}
+	cancellacommenti(addslashes($_POST["cancella_commento"]));
+	die;
+}
+global $nomi_mesi,$_UTENTE;
+$tabelle=array(
+"r"=>"sdmt_recensioni",
+"a"=>"sdmt_articoli"
+);
+$raggruppa_post=isset($_COOKIE["_raggruppa_commenti"])?$_COOKIE["_raggruppa_commenti"]:true;
+if(isset($_POST["raggruppa"])){
+	setcookie("_raggruppa_commenti",$_POST["raggruppa"],time()+60*60*24*365,"/",".storiadeifilm.it",false,true);
+	_MUORI(_URL."#commenti");
+}
+if(isset($_POST["cancellami"])&&$_UTENTE->id){
+	$iscritti=explode(",",db::query("SELECT Mailto FROM {$tabelle[$sezione]} WHERE ID=$id")->valore());
+	$pos=array_search($_UTENTE->id,$iscritti);
+	if($pos!==false){
+		unset($iscritti[$pos]);
+		db::query("UPDATE {$tabelle[$sezione]} SET Mailto='".implode(",",$iscritti)."' WHERE ID=$id");
+	}
+	_MUORI(_URL."#commenti");
+}
+if(isset($_POST["iscrivimi"])&&$_UTENTE->id){
+	$iscritti=explode(",",db::query("SELECT Mailto FROM {$tabelle[$sezione]} WHERE ID=$id")->valore());
+	if(!in_array($_UTENTE->id,$iscritti)){
+		if(empty($iscritti[0]))unset($iscritti[0]);
+		db::query("UPDATE {$tabelle[$sezione]} SET Mailto='".implode(",",array_merge($iscritti,array($_UTENTE->id)))."' WHERE ID=$id");
+	}
+	_MUORI(_URL."#commenti");
+}
+if(isset($_POST["commento"])&&$_UTENTE->id)
+	if(strlen($commento=addslashes(trim($_POST["commento"])))){
+		$risposta=is_numeric($_POST["risposta"])?$_POST["risposta"]:0;
+		$iscritti=explode(",",db::query("SELECT Mailto FROM {$tabelle[$sezione]} WHERE ID=$id")->valore());
+		if(!in_array($_UTENTE->id,$iscritti)){
+			if(empty($iscritti[0]))unset($iscritti[0]);
+			db::query("UPDATE {$tabelle[$sezione]} SET Mailto='".implode(",",array_merge($iscritti,array($_UTENTE->id)))."' WHERE ID=$id");
+		}
+		$url=_URL."#commento-".db::query("INSERT INTO sdmt_comments (ID_user,text,type,ID_obj,ID_response) VALUES ({$_UTENTE->id},'$commento','$sezione',$id,$risposta)")->id();
+		$url2=_URL."#commenti";
+		$mail=array();
+		foreach(array_merge($iscritti,array($autore,$autore2)) as $m)
+			if($m!=$_UTENTE->id&&$m){
+				$x=db::query("SELECT user_email FROM phpbb_users WHERE user_id=$m")->valore();
+				if(!empty($x)&&!in_array($x,$mail))$mail[]=$x;
+			}
+		M::modulo("mailto",array(
+			"oggetto"=>"Nuova risposta a una discussione che segui",
+			"destinatario"=>$mail,
+			"invii_singoli"=>true,
+			"testo"=>entita($_UTENTE->nome)." ha pubblicato un nuovo commento alla discussione su ".entita($titolo).". <a href='http://www.storiadeifilm.it/$url'>Clicca qui</a> per vedere il commento.\nSe non vuoi più ricevere aggiornamenti su questa discussione, visita <a href='http://www.storiadeifilm.it/$url2'>questa pagina</a> e seleziona \"Annulla sottoscrizione\".\nPer qualsiasi problema <a href='http://www.storiadeifilm.it/contatti.html'>contattaci</a>! Grazie,\n&nbsp;\nLo staff di Storia dei Film"
+			));
+		_MUORI($url);
+	}else
+		_MUORI(_URL."#commenti");
+if(!isset($votiutenti))$votiutenti=array();
+if(!isset($autore))$autore=-1;
+if(!isset($autore2))$autore2=-1;
+$iscritto=($_UTENTE->id&&isset($iscritti)&&in_array($_UTENTE->id,explode(",",$iscritti)));
+M::carica(_CORPO,"<a name='commenti'></a>");
+$dove=M::modulo("box",array("flag"=>"C","titolo"=>"Commenti","class"=>"tuttapagina"));
+if(defined("ANTEPRIMA")){
+	M::carica($dove,"<div class='incita'>Commenti disattivati nell'anteprima<br><br></div>");
+}else{
+	$commenti=db::query("SELECT ID,titolo,text,ID_user,ID_response,data_post,username FROM sdmt_comments LEFT JOIN phpbb_users ON user_id=ID_user WHERE type='$sezione' AND ID_obj='$id' ORDER BY ID")->righe();
+	foreach($commenti as $chiave=>$commento)
+			if($commento["titolo"].$commento["text"]=="")unset($commenti[$chiave]);
+	M::carica($dove,"<div class='incita'>".(count($commenti)==0?"Non c'&egrave; ancora nessun commento. Scrivi tu il primo!":(count($commenti)==1?"C'&egrave; un commento. Partecipa anche tu alla discussione!":"Ci sono ".count($commenti)." commenti. Partecipa anche tu alla discussione!").($raggruppa_post?"<form method='post' action='/"._URL."' id='raggruppapost'><input type='hidden' name='raggruppa' value='0'><input type='submit' class='bottone small' value='Mostra prima gli ultimi commenti'></form>":"<form method='post' action='/"._URL."' id='raggruppapost'><input type='hidden' name='raggruppa' value='1'><input type='submit' class='bottone small' value='Raggruppa i commenti per discussione'></form>"))."</div>".($GLOBALS["_UTENTE"]->id?"<div class='formcommento'><div class='rispondia'><div></div><button class='bottone small'>Annulla risposta</button></div><form action='/"._URL."' method='post'><input type='hidden' name='risposta' value='0'><textarea name='commento'></textarea><input type='submit' class='bottone' value='Invia'></form></div>".($iscritto?"<form method='post' action='/"._URL."' id='sottoscrivi'>Stai seguendo questa discussione <input type='hidden' name='cancellami' value='1'><input type='submit' class='bottone small' value='Annulla sottoscrizione'></form>":"<form method='post' action='/"._URL."' id='sottoscrivi'>Non stai ancora seguendo questa discussione <input type='hidden' name='iscrivimi' value='1'><input type='submit' class='bottone small' value='Resta aggiornato'></form>"):"<div class='incita'><a href='/login.html?da=".urlencode(_URL."#commenti")."'>Effettua l'accesso</a> o <a href='/registrati.html'>registrati</a> per commentare.</div><br>"));
+	if(!$raggruppa_post)$commenti=array_reverse($commenti);
+	foreach($commenti as $commento){
+		$data=strtotime($commento["data_post"]);
+		M::carica($raggruppa_post&&$commento["ID_response"]?"//article[@id='commento-".$commento["ID_response"]."']":$dove,"<article class='commento' id='commento-{$commento["ID"]}'><a name='commento-{$commento["ID"]}'></a>".(empty($commento["username"])?"<span class='avatar' style='background-image:url(/static/nopic/50.jpg);'></span>":"<a href='".linka("u".$commento["username"])."' class='avatar' style='background-image:url(".img("u",50,$commento["ID_user"]).")'></a>")."<div class='informazioni'>".(empty($commento["username"])?"Utente non pi&ugrave; registrato":"<a href='".linka("u".$commento["username"])."'>".$commento["username"]."</a>").($autore==$commento["ID_user"]||$autore2==$commento["ID_user"]?", <strong>autore</strong>,":"").(isset($votiutenti[$commento["ID_user"]])?" (ha votato ".$votiutenti[$commento["ID_user"]]." questo film)":"")." alle ".date("G:i",$data)." del ".data($data)." ha scritto:</div><div class='testo'>".arricchisci(($commento["titolo"]!=""?$commento["titolo"]."\n":"").$commento["text"])."</div>".(_LIVELLO(_CAPOREDATTORE)?"<div class='elimina'>Elimina</div>":"").($_UTENTE->id?"<div class='rispondi'>Rispondi</div>":"")."</article>");
+	}
+}

@@ -1,0 +1,112 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Ottiene tramite post q e k e restituisce un frammento di html contenente i risultati corrispondenti formattati.
+	Viene utilizzato via AJAX dal box di ricerca presente in tutte le pagine.
+	
+	q è la chiave di ricerca, valutata letteralmente, case insensitive, confrontando con le singole parole
+	k è il contesto:
+		* (o qualsiasi valore ad esclusione dei seguenti) cerca RISULTATI_GRUPPO risultati casuali per ogni contesto
+		x restituisce i primi RISULTATI_SINGOLI artisti corrispondenti in ordine alfabetico
+		r restituisce le prime RISULTATI_SINGOLI recensioni corrispondenti mettendo per prime quelle scritte più di recente
+		a restituisce i primi RISULTATI_SINGOLI articoli corrispondenti mettendo per primi quelli scritti più di recente
+		g restituisce i primi RISULTATI_SINGOLI generi corrispondenti in ordine alfabetico
+		t restituisce i primi RISULTATI_SINGOLI testi corrispondenti in ordine alfabetico per album e artista
+
+2do:
+- usare un'espressione regolare invce dei LIKE per il confronto
+- valutare se utilizzare una ricerca fonetica tipo metaphone invece di quella letterale
+- aggiungere le news?
+
+*/
+define('RISULTATI_GRUPPO',3);
+define('RISULTATI_SINGOLI',15);
+if(!isset($_POST["q"]))die;
+M::accendi("ajax","body/ajax");
+$q=$_POST["q"];
+if(!strlen($q)){
+	M::carica("body/ajax","<h3>Scrivi qualcosa per ottenere dei suggerimenti</h3>");
+	die;
+}
+function q($a){global $q;$qq=addslashes($q);return " ($a LIKE '$qq%' OR $a LIKE '% $qq%') ";}
+$nome=array("x"=>"artista","r"=>"recensione","a"=>"articolo","g"=>"genere","t"=>"testi","n"=>"news");
+if($_POST["k"]!="*")M::carica("body/ajax",'<h3 class="inerte">Stai cercando per '.$nome[$_POST["k"]].'</h3><span class="cercatutti">Cerca in tutte le sezioni</span>');
+switch($_POST["k"]){
+case "x": // RICERCA PER ARTISTA
+	$tot=db::query("SELECT COUNT(DISTINCT Artista) AS n FROM sdml_artista WHERE ".q("Artista"))->valore();
+	$visualizzati=$tot>RISULTATI_SINGOLI?RISULTATI_SINGOLI:$tot;
+	if($tot)
+		M::carica("body/ajax",'<h3 class="inerte">'.$visualizzati.' artist'.($tot==1?"a":"i").(RISULTATI_SINGOLI<$tot?' visualizzat'.($tot==1?"o":"i").' su '.$tot:"").' trovat'.($tot==1?"o":"i").'</h3><span class="veditutti">Visualizza tutti i risultati per artista</span>');
+	else
+		M::carica("body/ajax",'<h3 class="inerte">Nessun artista corrispondente</h3><span class="veditutti">Visualizza tutti i risultati per artista</span>');
+	M::carica("body/ajax",
+		"SELECT url,Artista FROM sdml_artista WHERE ".q("Artista")." GROUP BY Artista ORDER BY Artista LIMIT ".RISULTATI_SINGOLI,
+		'<a href="{linka,x{url}}"><img src="{img,x,30,{url}}" alt=""><strong>{Artista,80}</strong></a>');
+	break;
+case "r": // RICERCA PER RECENSIONE
+	$tot=db::query("SELECT COUNT(sdmt_recensioni.ID) AS n FROM sdmt_recensioni LEFT JOIN sdml_artista ON sdmt_recensioni.Artista = sdml_artista.ID WHERE sdmt_recensioni.active=1 AND (".q("sdmt_recensioni.Titolo_disco")." OR ".q("sdml_artista.Artista").")")->valore();
+	$visualizzati=$tot>RISULTATI_SINGOLI?RISULTATI_SINGOLI:$tot;
+	if($tot)
+		M::carica("body/ajax",'<h3 class="inerte">'.$visualizzati.' recension'.($tot==1?"e":"i").(RISULTATI_SINGOLI<$tot?' visualizzat'.($tot==1?"a":"e").' su '.$tot:"").' trovat'.($tot==1?"a":"e").'</h3>'.(RISULTATI_SINGOLI<$tot?'<span class="veditutti">Visualizza tutti i risultati</span>':""));
+	else
+		M::carica("body/ajax",'<h3 class="inerte">Nessuna recensione corrispondente</h3>');	
+	M::carica("body/ajax",
+		"SELECT sdmt_recensioni.url,sdmt_recensioni.Titolo_disco,sdml_artista.Artista FROM sdmt_recensioni LEFT JOIN sdml_artista ON sdmt_recensioni.Artista = sdml_artista.ID WHERE sdmt_recensioni.active=1 AND (".q("sdmt_recensioni.Titolo_disco")." OR ".q("sdml_artista.Artista").") ORDER BY Data DESC LIMIT ".RISULTATI_SINGOLI,
+		'<a href="{linka,r{url}}"><img src="{img,r,30,{url}}" alt=""><strong>{Titolo_disco,40}</strong>{Artista,40}</a>');
+	break;
+case "n": // RICERCA PER NEWS
+	$tot=db::query("SELECT COUNT(id) FROM _sezione_news WHERE stato='pubblicato' AND ".q("titolo"))->valore();
+	$visualizzati=$tot>RISULTATI_SINGOLI?RISULTATI_SINGOLI:$tot;
+	if($tot)
+		M::carica("body/ajax",'<h3 class="inerte">'.$visualizzati.' news'.(RISULTATI_SINGOLI<$tot?' visualizzat'.($tot==1?"a":"e").' su '.$tot:"").' trovat'.($tot==1?"a":"e").'</h3>'.(RISULTATI_SINGOLI<$tot?'<span class="veditutti">Visualizza tutti i risultati</span>':""));
+	else
+		M::carica("body/ajax",'<h3 class="inerte">Nessuna news corrispondente</h3>');	
+	M::carica("body/ajax",
+		"SELECT titolo,data,id FROM _sezione_news WHERE stato='pubblicato' AND ".q("titolo")." ORDER BY data DESC",
+		'<a href="/news/{id}/{formattadata_news,{data}}-{urlizza,{titolo}}.html"><img src="{img,n,30,{id}}" alt="">{data,{strtotime,{data}}} <strong>{titolo,40}</strong></a>');
+	break;
+case "a": // RICERCA PER ARTICOLO
+	$tot=db::query("SELECT COUNT(sdmt_articoli.ID) AS n FROM sdmt_articoli LEFT JOIN sdml_artista ON sdmt_articoli.Artista = sdml_artista.ID WHERE active=1 AND (".q("sdmt_articoli.Titolo")." OR ".q("sdml_artista.Artista").")")->valore();
+	$visualizzati=$tot>RISULTATI_SINGOLI?RISULTATI_SINGOLI:$tot;
+	if($tot)
+		M::carica("body/ajax",'<h3 class="inerte">'.$visualizzati.' articol'.($tot==1?"o":"i").(RISULTATI_SINGOLI<$tot?' visualizzat'.($tot==1?"o":"i").' su '.$tot:"").' trovat'.($tot==1?"o":"i").'</h3>'.(RISULTATI_SINGOLI<$tot?'<span class="veditutti">Visualizza tutti i risultati</span>':""));
+	else
+		M::carica("body/ajax",'<h3 class="inerte">Nessun articolo corrispondente</h3>');	
+	M::carica("body/ajax",
+		"SELECT sdmt_articoli.url,sdmt_articoli.Titolo,sdml_artista.Artista FROM sdmt_articoli LEFT JOIN sdml_artista ON sdmt_articoli.Artista = sdml_artista.ID WHERE active=1 AND (".q("sdmt_articoli.Titolo")." OR ".q("sdml_artista.Artista").") ORDER BY Data DESC LIMIT ".RISULTATI_SINGOLI,
+		'<a href="{linka,a{url}}"><img src="{img,a,30,{url}}" alt=""><strong>{Artista,40}</strong>{Titolo,40}</a>');
+	break;
+default: // RICERCA IN TUTTO
+	$risultati=false;
+	$risultati|=$trovati=M::carica("body/ajax", // RECENSIONI
+		"SELECT sdmt_recensioni.url,sdmt_recensioni.Titolo_disco,sdml_artista.Artista FROM sdmt_recensioni LEFT JOIN sdml_artista ON sdmt_recensioni.Artista = sdml_artista.ID WHERE sdmt_recensioni.active=1 AND (".q("sdmt_recensioni.Titolo_disco")." OR ".q("sdml_artista.Artista").") ORDER BY RAND() LIMIT ".RISULTATI_GRUPPO,
+		'<a href="{linka,r{url}}"><img src="{img,r,30,{url}}" alt=""><strong>{Titolo_disco,40}</strong>{Artista,40}</a>',
+		'<h3 class="categoria-r">Recensioni</h3>')!==false;
+	if($trovati)M::carica("body/ajax/h3[last()]", // NUMERO RECENSIONI
+		"SELECT COUNT(sdmt_recensioni.ID) AS n FROM sdmt_recensioni LEFT JOIN sdml_artista ON sdmt_recensioni.Artista = sdml_artista.ID WHERE sdmt_recensioni.active=1 AND (".q("sdmt_recensioni.Titolo_disco")." OR ".q("sdml_artista.Artista").")",
+		' ({n})');
+	$risultati|=$trovati=M::carica("body/ajax", // NEWS
+		"SELECT titolo,data,id FROM _sezione_news WHERE stato='pubblicato' AND ".q("titolo")." ORDER BY data DESC LIMIT ".RISULTATI_GRUPPO,
+		'<a href="/news/{id}/{formattadata_news,{data}}-{urlizza,{titolo}}.html"><img src="{img,n,30,{id}}" alt="">{data,{strtotime,{data}}} <strong>{titolo,40}</strong></a>',
+		'<h3 class="categoria-n">News</h3>')!==false;
+	if($trovati)M::carica("body/ajax/h3[last()]", // NUMERO NEWS
+		"SELECT COUNT(id) AS n FROM _sezione_news WHERE stato='pubblicato' AND ".q("titolo"),
+		' ({n})');
+	$risultati|=$trovati=M::carica("body/ajax", // ARTICOLI
+		"SELECT sdmt_articoli.url,sdmt_articoli.Titolo,sdml_artista.Artista FROM sdmt_articoli LEFT JOIN sdml_artista ON sdmt_articoli.Artista = sdml_artista.ID WHERE active=1 AND (".q("sdmt_articoli.Titolo")." OR ".q("sdml_artista.Artista").") ORDER BY RAND() LIMIT ".RISULTATI_GRUPPO,
+		'<a href="{linka,a{url}}"><img src="{img,a,30,{url}}" alt=""><strong>{Artista,40}</strong>{Titolo,40}</a>',
+		'<h3 class="categoria-a">Articoli</h3>')!==false;
+	if($trovati)M::carica("body/ajax/h3[last()]", // NUMERO ARTICOLI
+		"SELECT COUNT(sdmt_articoli.ID) AS n FROM sdmt_articoli LEFT JOIN sdml_artista ON sdmt_articoli.Artista = sdml_artista.ID WHERE active=1 AND (".q("sdmt_articoli.Titolo")." OR ".q("sdml_artista.Artista").")",
+		' ({n})');
+	$risultati|=$trovati=M::carica("body/ajax", // ARTISTI
+		"SELECT url,Artista FROM sdml_artista WHERE ".q("Artista")." GROUP BY Artista ORDER BY RAND() LIMIT ".RISULTATI_GRUPPO,
+		'<a href="{linka,x{url}}"><img src="{img,x,30,{url}}" alt=""><strong>{Artista,80}</strong></a>',
+		'<h3 class="categoria-x">Artisti</h3>')!==false;
+	if($trovati)M::carica("body/ajax/h3[last()]", // NUMERO ARTISTI
+		"SELECT COUNT(DISTINCT Artista) AS n FROM sdml_artista WHERE ".q("Artista"),
+		' ({n})');
+	if($risultati)
+		M::carica("^ajax",'<span class="veditutti">Visualizza tutti i risultati</span>');
+	else
+		M::carica("body/ajax",'<h3 class="inerte">Nessun risultato corrispondente</h3>');
+}

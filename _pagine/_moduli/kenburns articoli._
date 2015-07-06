@@ -1,0 +1,19 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea uno slide show ken burns con gli ultimi articoli
+	Richiede come parametri:
+	-	dove: un selettore TLAB opzionale, di default viene inserito nella seconda colonna
+
+*/
+$n=10;
+$img=array();
+$titoli=array();
+$url=array();
+foreach(db::query("SELECT sdmt_articoli.url,sdmt_articoli.Titolo,sdmt_articoli.ID,sdml_recensore.Recensore,sdml_recensore2.Recensore AS Recensore2 FROM sdmt_articoli LEFT JOIN sdml_recensore ON sdmt_articoli.Recensore=sdml_recensore.ID LEFT JOIN sdml_recensore AS sdml_recensore2 ON sdmt_articoli.Recensore2=sdml_recensore2.ID WHERE sdmt_articoli.active=1 ORDER BY ID DESC LIMIT $n")->righe()as $riga){
+	$img[]='"'.img("a",400,$riga["url"]).'"';
+	$titoli[]="'<b>".entita($riga["Titolo"],ENT_QUOTES)."<'+'/b>di ".entita($riga["Recensore"],ENT_QUOTES).(empty($riga["Recensore2"])?"":" e ".entita($riga["Recensore2"],ENT_QUOTES))."'";
+	$url[]='"'.linka("a".$riga["url"]).'"';
+}
+M::carica(isset($dove)?$dove:_COLONNA2,"<h2>Ultimi articoli:</h2>");
+M::modulo("kenburns",array("dove"=>isset($dove)?$dove:_COLONNA2,"img"=>$img,"titoli"=>$titoli,"url"=>$url,"class"=>"kbarticoli"));

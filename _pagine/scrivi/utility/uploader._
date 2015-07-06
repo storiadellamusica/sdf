@@ -1,0 +1,41 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+function salva_immagine($f,$larghezza,$altezza,$destinazione){
+	if(!($x=getimagesize($f)))return false;
+	switch($x[2]){
+		case IMAGETYPE_JPEG:
+			$o=imagecreatefromjpeg($f);
+			break;
+		case IMAGETYPE_GIF:
+			$o=imagecreatefromgif($f);
+			break;
+		case IMAGETYPE_PNG:
+			$o=imagecreatefrompng($f);
+			break;
+		default:
+			return false;
+	}
+	if($o===false)return false;
+	$l=$x[0];
+	$a=$altezza*$l/$larghezza;
+	if($a>$x[1]){
+		$a=$x[1];
+		$l=$larghezza*$a/$altezza;
+	}		
+	$tmp=imagecreatetruecolor($larghezza,$altezza);
+	if(!imagecopyresampled($tmp,$o,0,0,0,0,$larghezza,$altezza,$l,$a))return false;
+	imagedestroy($o);
+	if(!imagejpeg($tmp,$destinazione))return false;
+	imagedestroy($tmp);
+	return true;
+}
+$percorso=_MEDIA."n".DS."400".DS;
+$uploader=new qqFileUploader(array(),5*1024*1024);
+$result=$uploader->handleUpload(_TEMPDIR);
+if($result["success"]){
+	$filename=$uploader->getUploadName();
+	while(file_exists($percorso.($f=md5(time().rand())).".jpg"));
+	$result["id"]=$f;
+	$result["success"]=salva_immagine(_TEMPDIR.$filename,640,400,$percorso.$f.".jpg");
+	unlink(_TEMPDIR.$filename);
+}
+echo htmlspecialchars(json_encode($result),ENT_NOQUOTES);

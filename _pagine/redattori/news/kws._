@@ -1,0 +1,20 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+	$lettere_cercare=addslashes(preg_replace("/&(.)(grave|acute|cedil|circ|ring|tilde|uml);/", "$1",entita($_GET["term"])));
+	$lettere_confronto=strtolower($_GET["term"]);
+	$fatti=array();
+	$risultati=array();
+	foreach(db::query("SELECT kws FROM sdmt_recensioni NATURAL LEFT JOIN sdmt_articoli WHERE kws LIKE '$lettere_cercare%' OR kws LIKE '% $lettere_cercare%' ORDER BY RAND() LIMIT 30")->valori()as $riga){
+		foreach(explode(",",$riga) as $elemento){
+			$elemento=trim($elemento);
+			$elementol=strtolower($elemento);
+			if(strpos($elementol,$lettere_confronto)!==0)continue;
+			if(in_array($elementol,$fatti))continue;
+			$fatti[]=$elementol;
+			$elemento=addslashes($elemento);
+			$risultati[]='{"id":"'.$elemento.'","label":"'.$elemento.'","value":"'.$elemento.'"}';
+			if(count($fatti)>14)break;
+		}
+		if(count($fatti)>14)break;
+	}
+	echo(utf8("[".implode(",",$risultati)."]"));
+?>

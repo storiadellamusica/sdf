@@ -1,0 +1,8 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$modificatore_trassaggio=0.3;
+$arrayoraria=array(91,55,34,6,11,5,13,34,68,109,136,147,175,127,162,157,176,172,154,212,161,176,208,151);
+$arraysettimanale=array(0.73834,0.97413,0.99854,1,0.92055,0.88375,0.82179);
+$base=round(($arrayoraria[date("H")+0]+rand(10,20))*$arraysettimanale[date("w")+0]*$modificatore_trassaggio);
+$utenti=round(($arrayoraria[date("H")+0]+rand(10,20))*$arraysettimanale[date("w")+0]*$modificatore_trassaggio/150*8);
+$tot=$utenti+$base;
+echo("Ci sono $base visitatori e $utenti utenti collegati ($tot persone in totale)");

@@ -1,0 +1,67 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Redazione");
+M::modulo("colonne standard");
+/*! Corpo principale */
+
+$redattori=array(
+5104=>array("nome"=>"Antonio Falcone",
+"bio"=>"<strong>Caporedattore</strong>
+Mi chiamo Antonio Falcone, vivo a Roccella Jonica, in provincia di Reggio Calabria, sono un\"non più giovane\" di 44 anni, appassionato di tutto ciò che fa spettacolo e di cinema in particolare; prediligo noir e commedie made in Usa, ma nutro anche una grande passione per il neorealismo e la commedia all'italiana; altra grande passione la lettura:divoro tutti i libri, pur prediligendo narrativa e saggistica, e non disdegno fumetti d'antan, dal caro vecchio \"Topolino\" al classico \"Tex\", passando per \"Diabolik\".
+ Anche in tale ambito, però, vince spesso la voglia di conoscenza, e così mi ritrovo a leggere di tutto. Sono quindi una persona molto curiosa, capace di mettermi in gioco, infatti ho \"ripensato\" la mia vita e mi sono buttato a capofitto in quello che mi piace:scrivere di ciò che mi appassiona.
+ Per due anni ho lavorato, dapprima come collaboratore esterno, poi come redattore, responsabile delle pagine culturali, in un settimanale locale, \"la Riviera\", di Siderno, sempre in provincia di Reggio Calabria, del quale ho curato nello specifico le rubriche cinematografiche, scrivendo sia dei film \"moderni\" che del \"cinema d'epoca\", conseguendo il tesserino di giornalista pubblicista.
+ Attualmente, dopo una breve collaborazione con \"ilfattoonline\" di Siderno (settembre 2011-marzo 2012), continuo a scrivere per \"Storia dei film\", partecipando inoltre a trasmissioni televisive e radiofoniche in onda su emittenti locali e sul web, vincendo le mie idiosincrasie al riguardo. 
+Dimenticavo: sono vegetariano e animalista, infatti amo gli animali (moltissimo... a volte più delle persone...), il mio fido cane Billo  mi è accanto in questa nuova avventura..."),
+4043=>array("nome"=>"Francesco Carabelli",
+"bio"=>"<strong>Coordinatore editoriale</strong>
+Nato a Varese nel 1977. Si interessa di cinema dall'adolescenza. Si dedica in gioventù alla filosofia, laureandosi in filosofia morale.
+L'amore per il cinema lo porta a ritornare alla sua passione adolescenziale, una volta terminati gli studi.
+Inizia a scrivere recensioni per diletto su un proprio blog e su vari forum.
+In seguito collaboratore con vari portali, per i quali partecipa anche ad anteprime stampa e festival.
+Dal giugno 2009 collabora con Storia dei film in qualità di recensore.
+La passione cresce e da novembre 2010 è incaricato di coordinare l'attività editoriale del portale, tessendo contatti con i maggiori uffici stampa italiani e coinvolgendo nuovi collaboratori in questa avventura.
+Si costituisce così una redazione che ha permesso al portale di crescere e di arrivare ai livelli attuali."),
+14=>array("nome"=>"Alessandro Pascale",
+"bio"=>"Diceva Adorno che \"il compito dell'arte è introdurre caos nell'ordine\", onde per cui il compito del critico, in un mondo indecente governato dal profitto e dal denaro, dovrebbe essere sostenere l'arte nella sua natura intrinsecamente rivoluzionaria. Non per forza il cinema militante e politico quindi, anche se non si potrà mai non amare gente come Petri, Bertolucci, Godard, Loach e via dicendo. Nostro compito, di noi che non abbiamo il genio e l'estro creativo necessario a creare arte, è sostenere con ogni mezzo chi invece riesce a creare quella sublime frattura nella realtà, creando un'emozione, una riflessione, anche solo un'inquadratura capace per un momento di penetrare l'essenza della Verità. 
+Nostro compito è sostenere quella bellezza capace di dare un senso all'esistente e soprattutto all'esistenza. Senza pregiudizi, preconcetti o preclusioni di sorta. Semplicemente mirando a salvaguardare e sostenere, nel nostro piccolo, chi prova e riesce a resistere ogni giorno alle volgarità di questo pianeta. 
+Se non si è capito sono un compagno. Marxista. Critico. Verso tutto e verso tutti. Anche verso me stesso. Però ancora capace di emozionarmi per una delle arti più sublimi in grado di darci una via di fuga quotidiana accessibile a chiunque: il cinema."),
+4364=>array("nome"=>"Alessandro M. Naboni",
+"bio"=>"Il 29 gennaio 1983 nasce il piccolo Alessandro cui gli amorevoli genitori decisero di donare un lunghissimo secondo nome andato perso nel corso degli anni. Ne è rimasta soltanto una traccia, quella M. che poi diventerà emmepunto. Cresce girando vorticosamente con il triciclo attorno al tavolo del salotto, con un cane immaginario, l'odio per le suore e gli spinaci, il terrore per le biografie dei musicisti classici, la psico-analisi spicciola e quella primaveril-tendenza ad innamorarsi ogni secondo. Poi un giorno scopre che può anche mettere per iscritto le storie che s'è sempre fatto in testa e raccontare la realtà-ma-non-solo a modo suo, l'unico che accetta.
+L'amor che move il sole e l'altre stelle è la sua citazione preferita. Gli sguardi di Sergio Leone e la gente che corre nei film la sua filosofia di vita."),
+5094=>array("nome"=>"Alessandro Giovannini",
+"bio"=>"Redattore, co-editore, headhunter di StoriaDeiFilm. Ho 23 anni ed ho conseguito la laurea in Comunicazione, media e pubblicità all'università IULM di Milano, città dove risiedo, con una tesi sul cinema per il Web, relatore Gianni Canova. Attualmente sono iscritto al corso di laurea specialistico in Cinema e Nuove Tecnologie presso la medesima università, e spero di lavorare in futuro come regista."),
+5106=>array("nome"=>"Fulvia Massimi",
+"bio"=>"Mezza bergamasca, mezza romana, nata nell'anno della caduta del Muro, scrivo di cinema (o almeno ci provo) perché il cinema è la mia casa."),
+5154=>array("nome"=>"Pasquale D'Aiello",
+"bio"=>"Programmista-regista RAI per le piattaforme dei Nuovi Media, è autore di sceneggiature e regie di cortometraggi indipendenti, collabora con diverse testate cinematografiche."),
+5182=>array("nome"=>"Alessio Colangelo",
+"bio"=>"Il buio in sala non sancisce la fine, ma illumina la mente e il cuore degli uomini.
+Classe 89, praticamente da subito circondato da immagini digitali mi sono catapultato nel genere horror: film, fumetti, libri che hanno caratterizzato la fase adolescenziale della mia vita. Il passaggio ad altri generi è stato però piuttosto rapido e costante: dai Mainstream ai d'essai sempre conservando la vena critica e analitica insieme ad un inesauribile piacere scopico.
+Da convinto cinefilo ritengo, come diceva Godard, che la televisione crei l'oblio mentre il cinema ha sempre creato ricordi. Sono appassionato di letture per lo più classiche mentre al cinema prediligo pellicole di autori post-moderni tra cui i preferiti sono: Quentin Tarantino, Lars von Trier e David Lynch. Non sono sempre legato alla figura del regista poiché penso che un film sia un'opera collettiva che nasce dallo sforzo di tante menti e tante professioni delle quali un giorno spero di poter far parte.
+Il fatto di aver viaggiato molto (grazie alla mia seconda passione che è la subacquea) e di aver vissuto per cinque anni a Napoli lontano dalla mia città d'origine (Milano) mi ha reso più aperto di vedute e più preparato ai cambiamenti.
+Con studi superiori scientifici attualmente sono un laureando presso la IULM di Milano con una tesi in Cinema Italiano.
+Spero che le mie recensioni svolgano per voi un ruolo di guida e bussola all'interno del panorama sterminato di pellicole vecchie e nuove e, quando non sarete d'accordo con me, pensate che c'è sempre una verità ma che non è mai quella definitiva."),
+5200=>array("nome"=>"Alessandra Graziosi",
+"bio"=>"Alessandra nasce nel 1988 a Roma, dove tuttora vive, studia e gioca. Non si può negare che la sua passione più grande sia il cinema, ma non per questo disdegna l'antropologia, i viaggi e la scrittura. Nel 2009 frequenta un corso di sceneggiatura indetto da Morando Morandini Jr. Nello stesso periodo scrive e dirige due cortometraggi autoprodotti. Laureata in Letteratura, Musica e Spettacolo con indirizzo Cinema presso la Sapienza di Roma, dal 2010 ad oggi collabora con il regista Andrea Di Iorio in veste di aiuto regista e curando il montaggio dei suoi cortometraggi, tra i quali \"Come andrà a finire\", girato con ex allievi del Centro Sperimentale di Cinematografia e premiato in diversi festival. Dal 2012 diventa blogger di cinema e inizia a collaborare con Storia dei Film."),
+130=>array("nome"=>"Marco Biasio",
+"bio"=>"Se la fotografia è impatto visivo e la musica è esplorazione uditiva, che cos'è il cinema? Cerco di rispondere da anni a questa domanda, ma non ci sono ancora riuscito. I miei registi preferiti sono Lynch, Cronenberg, Kubrick, Pasolini, Tsukamoto. Non chiedermi di giudicarli, però: non ne sarei capace."),
+5237=>array("nome"=>"Fabrizia Malgieri",
+"bio"=>"Napoletana verace, ma monzese acquisita. Sono una cine-dipendente prolissa e anche parecchio incazzosa. Amo i film che hanno storie da raccontare, le colonne sonore e scrivere. Scrivere di cinema, soprattutto. Ho avuto la fortuna di studiare cinema per cinque anni (una laurea in Storia e Critica del Cinema e una laurea in Filmologia), ma soprattutto ho imparato a sventrarlo ed eviscerarlo con la minuzia di un medico legale. Fotogrammi, piani-sequenza, piano americano, campo lungo, la <i>donna ragno</i>, Neorealismo, Godard, Il tema degli animali in Kubrick, <i>L'avventura</i> e l'esperimento di Kulesov: questa è un po' di quella grammatica che ho acquisito in quegli anni, probabilmente i più intensi della mia vita.
+Il cinema è stato da sempre il mio <i>prozac</i>. Sin da quando ero piccola, è stata la cura contro le mie paure, la noia, le incertezze, le scelte esistenziali, eccetera, eccetera, eccetera. Ogni film ha al suo fianco un valore, una storia, un <i>background</i>, un significato. Sono sempre stata convinta che l'interpretazione di un film dipenda molto da uno stato mentale: non vi è mai capitato di provare sensazioni completamente opposte, guardando lo stesso film più di una volta?
+Ma passiamo alle <i>cose serie</i>. Dopo aver fatto gavetta in Rai per cinque anni e in radio, ho collezionato esperienze come responsabile di redazione online per il mensile di cinema <i>duellanti</i> e come redattrice per il canale <i>Premium Cinema Emotion</i> di Mediaset Premium. Attualmente, accanto alla mia collaborazione con <i>Storia dei Film</i>, sono dottoranda di ricerca presso l'Università IULM di Milano in Comunicazione e Nuove Tecnologie. 
+E ho una frase, tratta da uno dei mio film preferiti, che è diventata il mio karma: <i>Vi è mai capitato di sentire una barzelletta così tante volte da dimenticare perché è divertente? E poi la sentite di nuovo e improvvisamente è nuova. E vi ricordate perché vi era piaciuta tanto la prima volta... A furia di raccontare le sue storie, un uomo diventa quelle storie. Esse continuano a vivere dopo di lui, e così egli diventa immortale.</i> 
+Raccontate storie, diventate immortali."),
+5524=>array("nome"=>"Gloria Paparella",
+"bio"=>"Nata a Bollate nel 1987, laureata e specializzata in Teorie e Metodi per la Comunicazione presso l'Università degli Studi di Milano, il cinema rappresenta per me una forma di comunicazione poetica, elevata. Per questo amo scrivere soprattutto del modo di \"fare film\" degli anni Cinquanta e Sessanta, come se ci fosse una sorta di aurea che circonda questo periodo, e di attori e registi diventanti icone e leggende celebrate ancora oggi.")
+);
+
+
+foreach($redattori as $id=>$redattore)
+	M::carica(M::modulo("box",array("class"=>"biografia","flag"=>"r","titolo"=>$redattore["nome"])),"<a href='".linka("u".db::query("SELECT username FROM phpbb_users WHERE user_id=$id")->valore())."'><img src='".img("b",200,$id)."'><h1>{$redattore["nome"]}</h1>".riformatta(deutf8($redattore["bio"]))."</a>");
+
+
+/*
+db::query("SELECT username,user_id FROM phpbb_users WHERE user_livello>="._CAPOREDATTORE." ORDER BY user_id")->righe()as $redattore)
+	if(isset($redattori[$redattore["user_id"]]))
+	M::carica(M::modulo("box",array("class"=>"biografia","flag"=>"r","titolo"=>$redattori[$redattore["user_id"]]["nome"])),"<a href='".linka("u".$redattore["username"])."'><img src='".img("b",200,$redattore["user_id"])."'><h1>{$redattori[$redattore["user_id"]]["nome"]}</h1>".riformatta(deutf8($redattori[$redattore["user_id"]]["bio"]))."</a>");
+*/

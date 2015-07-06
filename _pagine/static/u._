@@ -1,0 +1,4 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$f=db::query("SELECT user_avatar FROM phpbb_users WHERE user_id='$id'")->valore();
+if(substr($f,0,7)!="http://")$f=_ROOT."forum".DS."images".DS."avatars".DS.$f;
+require "_imgproxy"._;

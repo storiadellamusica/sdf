@@ -1,0 +1,3 @@
+<?php
+error_reporting(_ADDETTO_AI_LAVORI?E_ALL:0);
+ini_set('display_errors',_ADDETTO_AI_LAVORI?1:0);

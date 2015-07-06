@@ -1,0 +1,6 @@
+<//div[@role="main"]{
+	inc/seconda_colonna
+}
+^//div[@role="complementary"]{
+	inc/terza_colonna_box
+}

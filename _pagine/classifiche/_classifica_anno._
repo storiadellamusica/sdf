@@ -1,0 +1,63 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::modulo("estrai numero pagina");
+define("RECENSIONI_PER_PAGINA",8);
+$totali=db::query("SELECT COUNT(*) FROM sdmt_recensioni WHERE active=1 AND YEAR(Uscita)=$anno")->valore();
+if(!$totali)require _404;
+$pagine_totali=ceil($totali/RECENSIONI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="Classifica dei film usciti nel $anno (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+M::carica(
+	M::modulo("box",["flag"=>"R","titolo"=>"Le classifiche della redazione","class"=>"elencoclassifiche"]),
+	'<a href="/articoli/classifica_2012_della_redazione.html">
+		<strong>Classifica 2012</strong>
+		<img src="'.img("r",120,"paolo_e_vittorio_taviani-cesare_deve_morire(kaos_cinematografica-2012)").'">
+		<img src="'.img("r",120,"wes_anderson-moonrise_kingdom(indian_paintbrush_american_empirical_pictures_moonrise-2012)").'">
+		<img src="'.img("r",120,"daniele_vicari-diaz(fandango-2012)").'">
+		<img src="'.img("r",120,"christopher_nolan-il_cavaliere_oscuro_il_ritorno(warner_bros_pictures_dc_entertainment_legendary_pictures_syncopy-2012)").'">
+		<img src="'.img("r",120,"matteo_garrone-reality(fandango-2012)").'">
+		<img src="'.img("r",120,"michael_haneke-amour(les_films_du_losange_x_filme_creative_pool_wega_film_ard_degeto_film_westdeutscher_rundfunk_bayerischer_rundfunk-2012)").'">
+		<img src="'.img("r",120,"martin_scorsese-hugo_cabret(paramount_pictures_gk_films_infinitum_nihil-2011)").'">
+		<img src="'.img("r",120,"sam_mendes-skyfall(mgm_columbia_picures-2012)").'">
+		<img src="'.img("r",120,"david_cronenberg-cosmopolis(lucky_red-2012)").'">
+		<img src="'.img("r",120,"joss_whedon-the_avengers(marvel_studios-2012)").'">
+	</a><a href="/articoli/classifica_anni_00_della_redazione.html">
+		<strong>Classifica anni \'00</strong>
+		<img src="'.img("r",120,"quentin_tarantino-bastardi_senza_gloria(universal_pictures-2009)").'">
+		<img src="'.img("r",120,"christopher_nolan-memento(newmarket_capital_group_team_todd_i_remember_productions_summit_entertainment-2000)").'">
+		<img src="'.img("r",120,"david_lynch-mulholland_drive(les_films_alain_sarde_asymmetrical_productions_studiocanal_the_picture_factory-2001)").'">
+		<img src="'.img("r",120,"romantico-erotico/romantico/michel_gondry-eternal_sunshine_of_the_spotless_mind(2004)").'">
+		<img src="'.img("r",120,"ethan_coen-non_e_un_paese_per_vecchi(paramount_vantage_miramax_films_scott_rudin_productions_mike_zoss_productions-2007)").'">
+		<img src="'.img("r",120,"tim_burton-big_fish(columbia_pictures_corporation_rastar_pictures-2003)").'">
+		<img src="'.img("r",120,"paolo_sorrentino-il_divo(mediafilm-2008)").'">
+		<img src="'.img("r",120,"clint_eastwood-gran_torino(2008)").'">
+		<img src="'.img("r",120,"christopher_nolan-il_cavaliere_oscuro(warner_bros-2008)").'">
+		<img src="'.img("r",120,"darren_aronofsky-requiem_for_a_dream(artisan_entertainment_thousand_words_sibling_productions-2000)").'">
+	</a><a href="/articoli/classifica_anni_90_della_redazione.html">
+		<strong>Classifica anni \'90</strong>
+		<img src="'.img("r",120,"quentin_tarantino-pulp_fiction(a_band_apart_jersey_films_miramax_films-1994)").'">
+		<img src="'.img("r",120,"steven_spielberg-schindler_s_list(universal_pictures-1993)").'">
+		<img src="'.img("r",120,"jonathan_demme-il_silenzio_degli_innocenti(orion_pictures_corporation_strong_heart_demme_production-1991)").'">
+		<img src="'.img("r",120,"joel_coen-il_grande_lebowski(polygram_filmed_entertainment_working_title_films-1997)").'">
+		<img src="'.img("r",120,"sam_mendes-american_beauty(dreamworks_skg-1999)").'">
+		<img src="'.img("r",120,"tim_burton-edward_mani_di_forbice(20th_century_fox-1990)").'">
+		<img src="'.img("r",120,"peter_weir-the_truman_show(paramount_pictures_scott_rudin_productions-1998)").'">
+		<img src="'.img("r",120,"quentin_tarantino-le_iene(live_entertainmente_dog_eat_dog_productions_inc-1992)").'">
+		<img src="'.img("r",120,"david_lynch-una_storia_vera(asymmetrical_productions_canal_channel_four_films_ciby_2000_les_films_alain_sarde_studio_canal-1999)").'">
+		<img src="'.img("r",120,"spike_jonze-essere_john_malkovich(gramercy_pictures_propaganda_films_single_cell_pictures-1999)").'">
+	</a>'
+);
+$contenitore=M::modulo("box",array("flag"=>"R","titolo"=>$titolo,"class"=>"elencorecensioni"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+define("PARTENZA_CLASSIFICA",($_NUMERO_PAGINA-1)*RECENSIONI_PER_PAGINA+1);
+function posizione_in_classifica($dummy){
+	static $n=PARTENZA_CLASSIFICA;
+	return $n++;
+}
+M::carica(
+	$contenitore,
+	"SELECT sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS casa,sdml_artista.Artista,recensioni.voto,recensioni.Titolo_Disco,recensioni.Etichetta,recensioni.data_disco,recensioni.Text,recensioni.ID,recensioni.url FROM ((SELECT sdmt_recensioni.*, ((sdmt_recensioni.voto + (sdmt_voti.value / sdmt_voti.tot)) / 2) AS 'voto_complessivo' FROM sdmt_recensioni JOIN (select ID, sum(value) as value, COUNT(value) as tot, tipo, ID_obj, ID_user from sdmt_voti_new where tipo='r' and ID_user NOT IN("._CONFIG_VOTE_BAN_LIST.") group by ID_obj order by ID_obj) as sdmt_voti ON sdmt_voti.ID_obj=sdmt_recensioni.ID WHERE YEAR(sdmt_recensioni.Uscita)='$anno' AND sdmt_voti.tipo='r' AND active=1) UNION (SELECT sdmt_recensioni.*, sdmt_recensioni.voto AS 'voto_complessivo' FROM sdmt_recensioni WHERE YEAR(sdmt_recensioni.Uscita)='$anno' AND ID NOT IN (SELECT sdmt_recensioni.ID FROM sdmt_recensioni JOIN (select ID, sum(value) as value, COUNT(value) as tot, tipo, ID_obj, ID_user from sdmt_voti_new where tipo='r' and ID_user NOT IN("._CONFIG_VOTE_BAN_LIST.") group by ID_obj order by ID_obj) as sdmt_voti ON sdmt_voti.ID_obj=sdmt_recensioni.ID WHERE YEAR(sdmt_recensioni.Uscita)='$anno' AND sdmt_voti.tipo='r' AND active=1) AND active=1))AS recensioni JOIN sdml_artista ON recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=recensioni.Etichetta ORDER BY voto_complessivo DESC LIMIT ".(($_NUMERO_PAGINA-1)*RECENSIONI_PER_PAGINA).",".RECENSIONI_PER_PAGINA,
+	'<a href="{linka,r{url}}"><img src="{img,r,135,{url}}" alt="{s,{Titolo_Disco}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{posizione_in_classifica,a}. {s,{Titolo_Disco}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>di {s,{Artista}} ({s,{casa}} {data_disco})</div></h1>{Text,180}</a>');
+M::modulo("rullo");

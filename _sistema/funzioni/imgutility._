@@ -1,0 +1,58 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+function imga($a,$b){
+	switch($a){
+		case "a":
+			return "/immagini_a/".db::query("SELECT img FROM sdmt_articoli WHERE ID=$b")->valore().".jpg";
+		case "r":
+			return "/immagini_r/".db::query("SELECT img FROM sdmt_recensioni WHERE ID=$b")->valore().".jpg";
+	}
+}
+function img($a,$b,$c){return "/static/$a/$b/".end(explode("/",$c)).".jpg";}
+/*
+	Restituisce un URL relativo che punta alla massima risoluzione disponibile per la larghezza richiesta dell'immagine principale del contenuto (recensione, capitolo, articolo, notizia, utente). Se larghezza è omesso, viene restituita l'immagine più piccola disponibile.
+
+	>	immagina({rcsanuxg}1234[,larghezza=0]);
+	>	immagina(1234,{rcsanuxg}[,larghezza=0]);
+	
+	r    recensione
+	c,s  capitolo
+	a    articolo
+	n    notizia
+	u    utente
+	x    artista
+	g    genere
+	
+2do:
+-	Relativamente a recensioni, capitoli e articoli
+	La gestione dell'archiviazione delle immagini è da riscrivere.
+	Per il momento viene restituita l'immagine uploadata originale (cioè la più grande disponibile).
+- Se l'immagine non esiste restituisci un'immagine ad hoc
+
+*/
+function immagina($a,$b=null,$c=0){
+	if($c==0&&is_numeric($b))$c=$b;
+	if($b==null||is_numeric($b)){
+		$b=$a[0];
+		$a=substr($a,1);
+	}
+	$a=addslashes($a);
+	switch($b){
+		case "r":
+			return "/immagini_r/".db::query("SELECT img FROM sdmt_recensioni WHERE id='$a'")->valore().".jpg";
+		case "c": case "s":
+			return "/immagini_c/".sprintf("%04d",db::query("SELECT Num FROM sdmt_capitoli	 WHERE id='$a'")->valore()).".jpg";
+		case "a":
+			return "/immagini_a/".db::query("SELECT img FROM sdmt_articoli WHERE id='$a'")->valore().".jpg";
+		case "n":
+			return "/news/immagini/".($c>95?"b":"s")."/".array_pop(explode(",",db::query("SELECT immagini FROM sdmt_news WHERE id='$a'")->valore())).".jpg";
+		case "u": return "/forum/images/avatars/".db::query("SELECT user_avatar FROM phpbb_users WHERE user_id='$a'")->valore();
+		case "x":
+			if(($tmp=db::query("SELECT img FROM sdml_artista WHERE ID='$a'")->valore())!="")
+				return "/immagini_artisti/".$tmp;
+			else
+				return immagina(db::query("SELECT ID FROM sdmt_recensioni WHERE Artista='$a' ORDER BY data_disco DESC, data_recensione DESC")->valore(),"r",$c);
+		case "g":
+ 			return img("r",30,db::query("SELECT url FROM sdmt_recensioni WHERE Genere1=(SELECT ID FROM sdml_generi WHERE url='$a') ORDER BY data_disco DESC, data_recensione DESC")->valore());
+		default: return "/";
+	}
+}

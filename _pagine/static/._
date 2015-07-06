@@ -1,0 +1,38 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+if(file_exists($file=str_replace("static",_MEDIA,_URL))){
+	$mime=array(
+		"css"=>"text/css",
+		"jpg"=>"image/jpeg",
+		"jpeg"=>"image/jpeg",
+		"gif"=>"image/gif",
+		"png"=>"image/png",
+		"js"=>"text/javascript",
+		"swf"=>"application/x-shockwave-flash",
+		"eot"=>"application/vnd.ms-fontobject",
+		"svg"=>"image/svg+xml",
+		"ttf"=>"font/ttf",
+		"woff"=>"application/x-woff",
+		"ico"=>"image/x-icon"
+	);
+	$ext=end(explode(".",reset(explode("?",_URL))));
+	if(isset($mime[$ext]));
+		header("Content-type: ".$mime[$ext]);
+	header("Content-length: ".filesize($file));
+	$lastModified=filemtime($file);
+	$etagFile=md5($file.$lastModified);
+	$etagHeader=(isset($_SERVER['HTTP_IF_NONE_MATCH'])?trim($_SERVER['HTTP_IF_NONE_MATCH']):false);
+	header("Last-Modified: ".gmdate("D, d M Y H:i:s",$lastModified)." GMT");
+	header("Etag: $etagFile");
+	header('Cache-Control: public');
+	header("Pragma:");
+	header("Expires: ".gmdate("D, d M Y H:i:s",time()+60*60*24). " GMT");
+	if(@strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE'])==$lastModified||$etagHeader==$etagFile){
+		header("HTTP/1.1 304 Not Modified");
+		die;
+	}
+	readfile($file);
+	die;
+}
+list($altezza,$id)=$_PARAMETRI;
+if(!file_exists(_MEDIA.$_PAGINA))@mkdir(_MEDIA.$_PAGINA);
+$dest_dir=_MEDIA.$_PAGINA.DS.$altezza;

@@ -1,0 +1,51 @@
+.box.elencoclassifiche>div{
+	>a{
+		clear: both;
+		overflow: hidden;
+		display:block;
+		position: relative;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	img{
+		width: 120px;
+		height: 120px;
+		margin-right: -70px;
+	  -webkit-transition: margin 0.3s ease-out; 
+	     -moz-transition: margin 0.3s ease-out; 
+	      -ms-transition: margin 0.3s ease-out; 
+	       -o-transition: margin 0.3s ease-out; 
+	          transition: margin 0.3s ease-out;
+	}
+	a:hover img{
+		margin-right: -20px;
+	}
+	strong{
+		display: block;
+		width: 100%;
+		text-align: center;
+		color: @testoNegativo;
+		position: absolute;
+		top: 20px;
+		left: 0;
+		font-size: 48px;
+		text-shadow: 0 0 3px @testo,
+		             0 0 3px @testo,
+		             0 0 3px @testo,
+		             0 0 3px @testo;
+	}
+}
+.box.hannovotato>div{
+	a{
+		display: block;
+		float: left;
+		box-sizing: border-box;
+		width: 25%;
+		padding: 5px 30px 5px 10px;
+		color: @testo;
+		font-size: 14px;
+		img{
+			margin-right: 5px;
+		}
+	}
+}

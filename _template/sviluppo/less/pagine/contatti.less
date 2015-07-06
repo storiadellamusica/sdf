@@ -1,0 +1,45 @@
+.box.contatti div{
+	padding: 0 10px;
+	p{
+		font-size: 14px;
+		&.indirizzo{
+			color:desaturate(@colore_a,10%);
+		}
+		&.hyphenate{
+			text-align: justify;
+		}
+	}
+}
+.box.form_contatti div{
+	padding: 0 10px;
+	font-size: 14px;
+	#website{
+		display: none;
+	}
+	input[type="text"],select{
+		outline: none;
+		border:1px solid @colore_b;
+		padding: 3px;
+		.angoliArrotondati();
+		float: right;
+		margin-right: 50px;
+		margin-bottom: 5px;
+		clear: both;
+	}
+	label{
+		clear: both;
+	}
+	textarea{
+		box-sizing: border-box;
+		width: 100%;
+		outline: none;
+		border:1px solid @colore_b;
+		padding: 3px;
+		.angoliArrotondati();
+		resize:none;
+	}
+	input[type="submit"]{
+		display: block;
+		margin: 15px auto;
+	}
+}

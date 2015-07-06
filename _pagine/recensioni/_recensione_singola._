@@ -1,0 +1,133 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*! Caricamento dati e inizializzazione */
+if($_PARAMETRI[0]=="anteprima")define("ANTEPRIMA",true);
+if($_PARAMETRI[0]=="minianteprima")define("ANTEPRIMA",true);
+$id=end($_PARAMETRI);
+$dati=db::query("SELECT
+sdmt_recensioni.ID AS id,
+sdmt_recensioni.Articolo AS articolo_padre,
+sdmt_recensioni.Titolo_Disco AS titolo,
+sdmt_recensioni.Artista AS id_artista,
+generi1.sezione_id AS padre1,
+generi1.Genere AS genere1,
+sdmt_recensioni.Genere1 AS id_genere1,
+generi2.sezione_id AS padre2,
+generi2.Genere AS genere2,
+sdmt_recensioni.Genere2 AS id_genere2,
+generi3.sezione_id AS padre3,
+generi3.Genere AS genere3,
+sdmt_recensioni.Genere3 AS id_genere3,
+sdmt_recensioni.kws AS keywords,
+sdmt_recensioni.Text AS testo,
+sdmt_recensioni.ownair AS ownair,
+sdmt_recensioni.plot AS trama,
+sdmt_recensioni.nazione AS nazione,
+sdmt_recensioni.runtime AS durata,
+sdmt_recensioni.sceneggiatura AS sceneggiatura,
+sdmt_recensioni.voto AS voto,
+sdml_etichetta.Etichetta AS casa,
+sdmt_recensioni.data_disco AS anno,
+sdml_recensore.ID_user AS id_recensore,
+sdml_recensore2.ID_user AS id_recensore2,
+sdmt_recensioni.Recensore AS id_recensore_alias,
+sdmt_recensioni.Recensore2 AS id_recensore2_alias,
+sdml_recensore.Recensore AS nome_recensore,
+sdml_recensore2.Recensore AS nome_recensore2,
+phpbb_users.username AS nick_recensore,
+phpbb_users2.username AS nick_recensore2,
+sdmt_recensioni.tracks AS cast,
+sdmt_recensioni.youtube AS youtube,
+sdmt_recensioni.filmtrailer_ID AS filmtrailer,
+sdml_artista.Artista AS artista,
+sdml_artista.url AS url_artista,
+sdmt_recensioni.Mailto AS iscritti
+FROM sdmt_recensioni
+LEFT JOIN sdml_artista ON sdml_artista.ID=sdmt_recensioni.Artista
+LEFT JOIN sdml_recensore ON sdml_recensore.ID=sdmt_recensioni.Recensore
+LEFT JOIN sdml_recensore AS sdml_recensore2 ON sdml_recensore2.ID=sdmt_recensioni.Recensore2
+LEFT JOIN sdml_generi AS generi1 ON generi1.ID=sdmt_recensioni.Genere1
+LEFT JOIN sdml_generi AS generi2 ON generi2.ID=sdmt_recensioni.Genere2
+LEFT JOIN sdml_generi AS generi3 ON generi3.ID=sdmt_recensioni.Genere3
+LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta
+LEFT JOIN phpbb_users ON sdml_recensore.ID_user=phpbb_users.user_id
+LEFT JOIN phpbb_users AS phpbb_users2 ON sdml_recensore2.ID_user=phpbb_users2.user_id
+WHERE ".(defined("ANTEPRIMA")?"sdmt_recensioni.ID=$id":"sdmt_recensioni.active=1 AND sdmt_recensioni.url LIKE '%/$id'"))->riga();
+if(!$dati)require _404;
+M::accendi("tre_colonne");
+/*! Speciali */
+if($dati["articolo_padre"])M::modulo("speciali",array("sezione"=>"a","id"=>$dati["articolo_padre"]));
+M::modulo("speciali",array("sezione"=>"x","id"=>$dati["id_artista"]));
+/*! Metadati e title */
+M::titolo("Recensione: ".$dati["artista"]." - ".$dati["titolo"]);
+M::titolofacebook($dati["artista"]." - ".$dati["titolo"]);
+M::descrizione($dati["testo"]);
+M::keyword($dati["keywords"]);
+M::immagine(img("r",400,$id));
+/*! Video */
+if($dati["youtube"])
+	M::modulo("youtube",array("video"=>explode(",",$dati["youtube"]),"dove"=>M::modulo("box",array("flag"=>"V","titolo"=>"Video","class"=>"video"))));
+elseif($dati["filmtrailer"])
+	M::modulo("embed",array("swf"=>"http://www.player.filmtrailer.com/v3.4/player.swf?file=http://it.player-feed.previewnetworks.com/cinema/{$dati["filmtrailer"]}/?channel_user_id=391100133-1&default_quality=xlarge&display_title=over&repeat=none&volume=80&autostart=false&displayclick=play&enable_link=false&backcolor=ff6c00&frontcolor=ffffff"));
+/*! Articolo padre */
+if($dati["articolo_padre"])
+	M::carica(
+		M::modulo("box",array("flag"=>"A","titolo"=>"Articolo principale","class"=>"elencoarticoli")),
+		"SELECT url,Titolo,Text FROM sdmt_articoli WHERE ID='{$dati["articolo_padre"]}'",
+		'<a href="{linka,a{url}}"><img src="{img,a,90,{url}}" alt="{s,{Titolo}}"><h1>{s,{Titolo}}</h1>{Text,200}</a>');
+/*! Recensione */
+$parti_trama=explode("#",$dati["trama"]);
+$trama=preg_replace("#<.p>$#","",riformatta(array_shift($parti_trama))).(count($parti_trama)?" <span id='mostra_spoiler' class='bottone small'>mostra spoiler</span><\p><div class='spoiler'>".riformatta(implode("",$parti_trama))."</div>":"<\p>");
+M::carica(M::modulo("box",array("flag"=>"R","titolo"=>"Recensione")),'<article class="corpo_recensione" itemscope itemtype="http://data-vocabulary.org/Review"><span data-voto="'.$dati["voto"].'" itemprop="rating" itemscope itemtype="http://data-vocabulary.org/Rating"><strong itemprop="value">'.$dati["voto"]."</strong><meta itemprop='best' content='10'>/10</span><h1 itemprop='itemreviewed'>{$dati["titolo"]} <em>regia di <a href='".linka("x".$dati["url_artista"])."'>".$dati["artista"]."</a></em></h1><a href='/".url_genere($dati["padre1"])."/".urlizza($dati["genere1"])."/' class='nastro ".coloregenere($dati["padre1"])."'>{$dati["genere1"]}</a><div class='autore'>recensione di <a href='".linka("u".$dati["nick_recensore"])."' itemprop='reviewer'>{$dati["nome_recensore"]}</a>".($dati["id_recensore2_alias"]?" e <a href='".linka("u".$dati["nick_recensore2"])."'>{$dati["nome_recensore2"]}</a>":"")."<div class='trama'>$trama</div></div>".(strlen($dati["ownair"])?"<a href='{$dati["ownair"]}' target='_blank'>Guarda {$dati["titolo"]} su <img src='/static/img/ownair.png' alt='OwnAir'></a>":"").riformatta($dati["testo"]).M::modulo("twitta").M::modulo("facebook like").'</article>');
+/*! Informazioni sul film */
+$generi="";
+for($i=1;$i<4;$i++)
+	if($dati["padre$i"])$generi.='<a href="/'.url_genere($dati["padre$i"])."/".urlizza($dati["genere$i"]).'/">'.$dati["genere$i"].'</a> ';
+if(!empty($generi))$generi="<div class='generi'>$generi</div>";
+$amazon_link=_amazon_link($dati["artista"],$dati["titolo"]);
+preg_match("#href='([^']*)'#",$amazon_link,$amazon_link_estratto);
+$amazon_link_estratto=count($amazon_link_estratto)>1?$amazon_link_estratto[1]:"";
+$siti="";//"<div class='collegamenti'>$amazon_link</div>";
+$sceneggiatori=array();
+foreach(array_slice(unserialize($dati['sceneggiatura']),0,12)as $sceneggiatore)
+	if($url_sceneggiatore=db::query("SELECT url FROM sdml_artista WHERE Artista LIKE '%".addslashes($sceneggiatore)."%'")->valore())
+		$sceneggiatori[]='<a href="'.linka("x".$url_sceneggiatore).'">'.$sceneggiatore.'</a>';
+	else
+		$sceneggiatori[]=$sceneggiatore;
+if(count($sceneggiatori))$testosceneggiatura='<div class="sceneggiatori"><strong>Sceneggiatura: </strong>'.implode(", ",$sceneggiatori).'</div>';
+else
+	$testosceneggiatura="";
+$cast=array();
+foreach(array_slice(unserialize($dati['cast']),0,12)as $attore)
+	if($url_attore=db::query("SELECT url FROM sdml_artista WHERE Artista LIKE '%".addslashes($attore)."%'")->valore())
+		$cast[]='<a href="'.linka("x".$url_attore).'"><img src="'.img("x",20,$url_attore).'"> '.$attore.'</a>';
+	else
+		$cast[]='<img src="'._URL_MEDIA.'nopic/20.jpg"> '.$attore;
+if(count($cast))
+	$testocast='<div class="titolocast">Cast</div><ul><li>'.implode("</li><li>",$cast).'</li></ul>';
+else
+	$testocast="";
+M::carica(M::carica(_COLONNA3,"<a href='$amazon_link_estratto' class='cornice'><img src='".(defined("ANTEPRIMA")?imga("r",$id):img("r",215,$id))."'></a><h2>Informazioni sul film:</h2><div class='info_film'></div>"),'<span class="casa">'.$dati["casa"]."</span> <a href='/recensioni/".$dati["anno"]."/' class='anno'>".$dati["anno"]."</a><div class='datitecnici'>{$dati["nazione"]}, {$dati["durata"]} minuti<br>$testosceneggiatura</div>$generi$siti".$testocast);
+M::modulo("call to action");
+M::modulo("box facebook");
+/*! Dello stesso regista */
+$filmografia=db::query("SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista FROM sdmt_recensioni JOIN sdml_artista ON sdml_artista.ID=sdmt_recensioni.Artista WHERE sdmt_recensioni.active=1 AND sdmt_recensioni.Artista={$dati["id_artista"]} AND sdmt_recensioni.ID!={$dati["id"]} ORDER BY data_disco LIMIT 10")->righe();
+if($filmografia){
+	$tmp="";
+	foreach($filmografia as $d)
+		$tmp.='<a href="'.linka("r".$d["url"]).'"><img src="'.img("r",25,$d["url"]).'"><strong>'.$d["Titolo_Disco"].'</strong> '.$d["Artista"].'</a>';
+	M::carica(_COLONNA3,"<h2>Dello stesso regista:</h2><div class='dellostessoartista'>$tmp</div>");
+}
+/*! Dello stesso recensore */
+if($dati["id_recensore2_alias"]){
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore_alias"],"nome"=>$dati["nome_recensore"],"max"=>5));
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore2_alias"],"nome"=>$dati["nome_recensore2"],"max"=>5));	
+}else
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore_alias"],"nome"=>$dati["nome_recensore"]));
+/*! Potrebbero interessarti */
+M::carica(M::carica(_COLONNA2,'<h2>Potrebbero interessarti:</h2><div class="elencorecensioni"></div>'),
+	M::modulo("collegati",array("id"=>$dati["id"],"keywords"=>$dati["artista"].",".$dati["titolo"].",".str_replace(", ",",",$dati["keywords"])))
+	);
+/*! Voti */
+$votiutenti=M::modulo("voti",array("id"=>$dati["id"]));
+/*! Commenti */
+M::modulo("commenti",array("sezione"=>"r","id"=>$dati["id"],"votiutenti"=>$votiutenti,"autore"=>$dati["id_recensore"],"autore2"=>$dati["id_recensore2"],"iscritti"=>$dati["iscritti"],"titolo"=>$dati["artista"]." - ".$dati["titolo"]));

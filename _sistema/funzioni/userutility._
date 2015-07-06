@@ -1,0 +1,11 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+function _LIVELLO($livello=_UTENTE){
+	global $_UTENTE;
+	return $_UTENTE->livello>=$livello;
+}
+function _RISERVATO($livello=_UTENTE,$proprietario="nessuno"){
+	global $_UTENTE;
+	if(!$_UTENTE->id)_MUORI("login.html?da=".urlencode(_URL));
+	if(!_LIVELLO($livello)&&$proprietario!=$_UTENTE->id)_MUORI();
+}
+$_UTENTE=new utente;

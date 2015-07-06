@@ -1,0 +1,54 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+/*! Corpo principale */
+/*! 	Macchianera Awards */
+/*
+M::carica(
+	M::modulo("box",array("flag"=>"M","titolo"=>"Macchianera Italian Awards","id"=>"macchianera")),
+	"<a href='https://docs.google.com/forms/d/1RA28e9bIr1bCfwfSpT7hbuqm9AcrytkujltoLJEpQSU/viewform' target='_blank'><img src='/static/img/macchianera.jpg' alt='Vota Storia dei film ai Macchianera Italian Awards'></a>"
+);
+*/
+/*! 	Trailer */
+M::modulo("embed",array("flag"=>"C","titolo"=>"Nei cinema","swf"=>"http://www.player.filmtrailer.com/v3.3/player.swf?file=http://it.player-feed.filmtrailer.com/v2.0/cinema/Latest10InCinema/?channel_user_id=391100133-1&default_quality=xlarge&display_title=always&shuffle=true&volume=80&displayclick=play&enable_link=false&backcolor=ff6c00&frontcolor=ffffff&mute=true"));
+/*! 	Nuove recensioni */
+$giamessi=array();
+function messo($a){$GLOBALS["giamessi"][]=$a;}
+M::carica(
+	M::modulo("box",array("flag"=>"R","titolo"=>"Recensioni nuove uscite","id"=>"nuoveuscite","class"=>"elencorecensioni")),
+	"SELECT sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS casa,sdml_artista.Artista,sdmt_recensioni.voto,sdmt_recensioni.Titolo_Disco,sdmt_recensioni.Etichetta,sdmt_recensioni.data_disco,sdmt_recensioni.Text,sdmt_recensioni.ID,sdmt_recensioni.url FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta WHERE active=1 AND (sdmt_recensioni.imdb IN(SELECT id FROM _cache WHERE tipo='ultimi film usciti') OR YEAR(Uscita)>2010) ORDER BY Data DESC, ID DESC LIMIT 6",
+	'<a href="{linka,r{url}}"><img src="{img,r,135,{url}}" alt="{s,{Titolo_Disco}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{Titolo_Disco}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>di {s,{Artista}} ({s,{casa}} {data_disco})</div></h1>{Text,180}</a>{messo,{ID}}');
+/*! 	Serie tv */
+M::carica(
+	M::carica(
+		M::modulo("box",array("flag"=>"R","titolo"=>"Recensioni serie tv","id"=>"nuoveuscitetv","class"=>"elencorecensioni")),
+		"SELECT _sezione_serietv.*,sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS nome_produttore FROM _sezione_serietv LEFT JOIN sdml_generi ON sdml_generi.ID=_sezione_serietv.genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=_sezione_serietv.produttore WHERE stato='pubblicato' ORDER BY data_recensione DESC, ID DESC LIMIT 2",
+		'<a href="{linka,t{url}}"><img src="{img,t,135,{url}}" alt="{s,{titolo}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{titolo}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>({s,{nome_produttore}}, {anno})</div></h1>{testo,180}</a>'),
+	"<h1 style='text-align:center'><a href='/serie-tv/'>Tutte le serie tv &gt;</a></h1>");
+/*! 	Rullo */
+M::modulo("rullo");
+/*! Seconda colonna */
+/*! 	In evidenza */
+M::carica(
+	M::carica(_COLONNA2,'<h2>In evidenza:</h2><div class="elencorecensioni"></div>'),
+	"SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE active=1 AND sdmt_recensioni.ID=(SELECT recensione FROM _goldies_automatici ORDER BY id DESC LIMIT 1)",
+	'<a href="{linka,r{url}}"><img src="{img,r,50,{url}}" alt="{s,{Titolo_Disco}}"><strong>{s,{Titolo_Disco}}</strong> {s,{Artista}}</a>');
+/*! 	Ken Burns articoli */
+M::modulo("kenburns articoli");
+/*! 	Scrivi per noi */
+M::carica(_COLONNA2,'<a href="http://www.storiadeifilm.it/sys/admin/new_recensione_bozza.php"><img src="/static/bnr/mandarece_sdf_logo2.jpg" alt="Scrivi una recensione"></a>');
+/*! 	Recensioni */
+M::carica(
+	M::carica(_COLONNA2,'<h2>Ultime recensioni:</h2><div class="elencorecensioni"></div>'),
+	"SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE active=1 AND sdmt_recensioni.ID NOT IN(".implode(",",$giamessi).") ORDER BY Data DESC, sdmt_recensioni.ID DESC LIMIT 14",
+	'<a href="{linka,r{url}}"><img src="{img,r,50,{url}}" alt="{s,{Titolo_Disco}}"><strong>{s,{Titolo_Disco}}</strong> {s,{Artista}}</a>');
+/*! Terza colonna  */
+/*! 	Ken Burns news */
+M::modulo("kenburns news");
+/*! 	Bottoni invia, facebook, rss... */
+M::modulo("call to action");
+/*! 	Ken Burns news */
+M::modulo("kenburns speciali");
+/*! 	Ultimi commenti */
+M::modulo("ultimi commenti");
+/*! 	Ultime dal forum */
+M::modulo("ultime dal forum",array("quanti"=>7));

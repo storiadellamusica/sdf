@@ -1,0 +1,5 @@
+<?php
+define('_CORPO','//div[@role="main"]');
+define('_COLONNA2','//div[@role="complementary"]/div[last()]');
+define('_COLONNA3','//div[@id="terzacolonna"]');
+define('_SCRIPT','//script[@id="script_aggiuntivi"]');

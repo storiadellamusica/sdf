@@ -1,0 +1,15 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("ARTICOLI_PER_PAGINA",11);
+$totali=db::query("SELECT COUNT(*) FROM sdmt_articoli".(isset($criterio)?" WHERE $criterio":""))->valore();
+$pagine_totali=ceil($totali/ARTICOLI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo=(isset($titolo)?$titolo:"Tutti gli articoli")." (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"A","titolo"=>$titolo,"class"=>"elencoarticoli"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+	"SELECT url,Titolo,Text FROM sdmt_articoli WHERE active=1".(isset($criterio)?" AND $criterio":"")." ORDER BY data DESC LIMIT ".(($_NUMERO_PAGINA-1)*ARTICOLI_PER_PAGINA).",".ARTICOLI_PER_PAGINA,
+	'<a href="{linka,a{url}}"><img src="{img,a,90,{url}}" alt="{s,{Titolo}}"><h1>{s,{Titolo}}</h1>{Text,200}</a>');

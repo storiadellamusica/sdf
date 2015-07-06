@@ -1,0 +1,29 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::modulo("estrai numero pagina");
+define("COMMENTI_PER_PAGINA",14);
+$totali=db::query("SELECT COUNT(*) FROM sdmt_comments WHERE text!='' AND ID_user=".$dati["user_id"])->valore();
+$pagine_totali=ceil($totali/COMMENTI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="Commenti di ".$dati["username"]." (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"C","titolo"=>$titolo,"class"=>"elencocommenti"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+		"SELECT 
+	c.Type,
+	c.ID,
+	c.text,
+	sdmt_articoli.url AS urla,
+	sdmt_recensioni.url AS urlr,
+	sdmt_articoli.Titolo AS titoloa,
+	CONCAT(sdml_artista.Artista,' - ',sdmt_recensioni.Titolo_disco) AS titolor
+FROM sdmt_comments AS c 
+LEFT JOIN sdmt_articoli ON sdmt_articoli.ID=ID_obj && c.type='a'
+LEFT JOIN sdmt_recensioni ON sdmt_recensioni.ID=ID_obj && c.type='r'
+LEFT JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID && c.type='r'
+WHERE c.ID_user=".$dati["user_id"]." AND c.text!=''
+ORDER BY c.ID DESC LIMIT ".(($_NUMERO_PAGINA-1)*COMMENTI_PER_PAGINA).",".COMMENTI_PER_PAGINA,
+	'<a href="{linka,{Type}{urla}{urlr}}#commento-{ID}"><img src="{img,{Type},50,{urla}{urlr}}" alt=""><h1>{titoloa}{titolor}</h1>{text,200}</a>');

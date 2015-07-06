@@ -1,0 +1,287 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+if(isset($_POST["ajaxdelete"])){
+	db::query("DELETE FROM _sezione_news WHERE id='{$_PARAMETRI[0]}' AND autore={$_UTENTE->id} AND stato IN('bozza','proposto','rifiutato')");
+	die;
+}
+if(isset($_POST["ajaxsave"])||isset($_POST["ajaxpubl"])){
+	$titolo=addslashes($_POST["titolo"]);
+	$sottotitolo=addslashes($_POST["sottotitolo"]);
+	$data=addslashes($_POST["anno"])."-".
+	      addslashes($_POST["mese"])."-".
+	      addslashes($_POST["giorno"]);
+	$testo=addslashes(str_replace(array("\n","\r")," ",$_POST["testo"]));
+	$immagini=array();
+	foreach($_POST["immagini"]as $i=>$immagine)
+		$immagini[]=array("i"=>$immagine,"a"=>$_POST["alt"][$i]);
+	$immagini=addslashes(serialize($immagini));
+	$video=addslashes($_POST["video"]);
+	$kws=addslashes($_POST["kws"]);
+	$note=addslashes($_POST["note"]);
+	$stato=isset($_POST["ajaxpubl"])?"proposto":"bozza";
+	if($_PARAMETRI[0]==-1)
+		$_PARAMETRI[0]=db::query("INSERT INTO _sezione_news (titolo,sottotitolo,data,testo,immagini,video,autore,kws,note,stato) VALUES ('$titolo','$sottotitolo','$data','$testo','$immagini','$video',{$_UTENTE->id},'$kws','$note','$stato')")->id();
+	else
+		db::query("UPDATE _sezione_news SET titolo='$titolo',sottotitolo='$sottotitolo',data='$data',testo='$testo',immagini='$immagini',video='$video',kws='$kws',note='$note',stato='$stato' WHERE id='{$_PARAMETRI[0]}' AND autore={$_UTENTE->id} AND stato IN('bozza','proposto','rifiutato')");
+	echo($_PARAMETRI[0]);
+	die;
+}
+if($_PARAMETRI[0]=='nuova')
+	$dati=array(
+		"id"=>-1,
+		"titolo"=>"",
+		"sottotitolo"=>"",
+		"data"=>date("Y-m-d"),
+		"testo"=>"",
+		"immagini"=>serialize(array()),
+		"video"=>"",
+		"autore"=>$_UTENTE->id,
+		"kws"=>"",
+		"stato"=>"bozza",
+		"note"=>""
+	);
+else
+	if(!$dati=db::query("SELECT * FROM _sezione_news WHERE id='{$_PARAMETRI[0]}'")->riga())
+//		require _404;
+die;
+if($dati["autore"]!=$_UTENTE->id)require _404;
+$dati["immagini"]=unserialize($dati["immagini"]);
+// se non è una bozza usa l'altra vista, magari dividi in una serie di _file
+
+$datae=explode("-",$dati["data"]);
+M::accendi("tre_colonne");
+M::titolo("Scrivi notizia");
+M::carica(M::modulo("box",array("flag"=>"N","titolo"=>"News")),'<form action="/'._URL.'" id="form_edit">
+Data<sup>2</sup> '.$datae[2].' '.$nomi_mesi[$datae[1]+0].' '.$datae[0].'
+<input type="hidden" name="giorno" value="'.$datae[2].'">
+<input type="hidden" name="mese" value="'.$datae[1].'">
+<input type="hidden" name="anno" value="'.$datae[0].'">
+<br><br>
+Titolo <input type="text" value="'.entita($dati["titolo"]).'" name="titolo"><br><br>
+Sottotitolo<sup>3</sup> <input type="text" value="'.entita($dati["sottotitolo"]).'" name="sottotitolo"><br><br>
+
+<div style="float:left">Immagini<sup>4</sup></div> <div style="margin-left:100px;border:1px solid #000;padding:10px" id="aggiungi_immagine"></div>
+
+<br>
+<!--Video<sup>5</sup>	<input type="hidden" name="video" value=""><br>-->
+<div id="toolbar" style="display: none;">
+Testo &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <a data-wysihtml5-command="bold" title="CTRL+B" class="bottone small">grassetto</a> 
+    <a data-wysihtml5-command="italic" title="CTRL+I" class="bottone small">corsivo</a>
+    <a data-wysihtml5-command="createLink" class="bottone small">inserisci collegamento</a>
+    <a data-wysihtml5-action="change_view" class="bottone small">codice html</a>
+    <div data-wysihtml5-dialog="createLink" style="display: none;margin:5px;">
+      <label>
+        Indirizzo:
+        <input data-wysihtml5-dialog-field="href" value="http://">
+      </label>
+      <a data-wysihtml5-dialog-action="save" class="bottone small">OK</a>&nbsp;<a data-wysihtml5-dialog-action="cancel" class="bottone small">Annulla</a>
+    </div>
+  </div><textarea name="testo" id="testo">'.entita($dati["testo"]).'</textarea><br><br>
+Parole chiave<sup>6</sup> <input type="text" value="'.entita($dati["kws"]).'" name="kws"><br><br>
+note<sup>7</sup> <textarea name="note" id="boxnote">'.entita($dati["note"]).'</textarea>
+</pre>
+</form>
+');
+
+M::carica(_COLONNA2,
+"<div class='bottoni_editing'>
+<span class='bottone disabled' id='btn_salva'>Salva bozza</span>
+<span class='bottone".($dati["id"]==-1?" disabled":"")."' id='btn_elimina'>Elimina bozza</span>
+<span class='bottone".($dati["id"]==-1?" disabled":"")."' id='btn_pubblica'>Pubblica notizia<sup>1</sup></span>
+</div>
+<div class='note hyphenate'><sup>1</sup> Premendo questo bottone tutte le modifiche effettuate alla notizia vengono salvate prima dell'invio per la pubblicazione. La pubblicazione non &egrave; immediata, ma avviene in seguito all'approvazione della redazione.</div>
+<div class='note hyphenate'><sup>2</sup> La data si riferisce alla data in cui pubblicare la notizia in caso di notizia differita. Non &egrave; possibile utilizzare date passate. Per la maggior parte delle notizie &egrave; possibile ignorare questo campo e lasciare la data odierna.</div>
+<div class='note hyphenate'><sup>3</sup> Il sottotitolo &egrave; facoltativo, ma pu&ograve; aiutare a indicizzare meglio la notizia nei motori di ricerca.</div>
+<div class='note hyphenate'><sup>4</sup> &Egrave; necessario caricare almeno un'immagine che verr&agrave; utilizzata come copertina per la notizia.</div>
+<div class='note hyphenate'><sup>5</sup> &Egrave; possibile allegare alla notizia uno o pi&ugrave; video da youtube inserendo il link al video.</div>
+<div class='note hyphenate'><sup>6</sup> Le parole chiave servono ad associare i contenuti collegati. &Egrave; possibile vedere un'anteprima dei contenuti collegati nella colonna di destra man mano che le parole chiave vengono digitate.</div>
+<div class='note hyphenate'><sup>7</sup> &Egrave; possibile utilizzare questo campo per inviare eventuali comunicazioni relative alla notizia alla redazione. Il testo inserito in questo spazio sar&agrave; visibile solo alla redazione ed &egrave; facoltativo.</div>"
+);
+
+
+M::carica(_COLONNA3,'<h2>Anteprima</h2>');
+M::modulo("kenburns",array("dove"=>_COLONNA3,"img"=>array("''"),"titoli"=>array("''"),"url"=>array("''")));
+
+M::carica(
+	M::carica(_COLONNA3,'<h2>Contenuti collegati:</h2><div></div>'),
+	"Nessun contenuto collegato");
+
+
+if(count($dati["immagini"])){
+	$tempimg=array();
+	$tempalt=array();
+	foreach($dati["immagini"]as $i){
+		$tempimg[]='"'.$i["i"].'"';
+		$tempalt[]='"'.entita($i["a"]).'"';
+	}
+	$codice_immagini='
+	var immaginicaricate=['.implode(",",$tempimg).'],
+	    altcaricati=['.implode(",",$tempalt).'];
+	for(i in immaginicaricate)
+		aggiungi_immagine(immaginicaricate[i],altcaricati[i]);';
+}else
+	$codice_immagini="";
+
+
+
+M::carica(_SCRIPT,
+'$(function(){
+	var modificato=false,
+	    id='.$dati["id"].',
+	    focuswasmine=null,
+	    salva=function(){
+	    	$(focuswasmine).focus();
+	    	$.post("/scrivi/news/"+id+".html",$("#form_edit").serialize()+"&ajaxsave=1",function(a){
+	    		if($.isNumeric(a)){
+			    	modificato=false;
+		    		$("#form_edit input,#form_edit textarea").each(function(){$(this).data("valore",$(this).val());});
+			    	$("#btn_salva").addClass("disabled");
+			    	if(id==-1){
+			    		id=a;
+							if(typeof(window.history.replaceState)=="function")
+								history.replaceState({},"",id+".html");
+							$("#btn_elimina").removeClass("disabled");
+							$("#btn_pubblica").removeClass("disabled");
+						}
+					}
+	    	},"text");
+	    }
+	    pubblica=function(){
+	    	$.post("/scrivi/news/"+id+".html",$("#form_edit").serialize()+"&ajaxpubl=1",function(a){
+	    		if($.isNumeric(a)){
+	    			modificato=false;
+	    			location.href="/scrivi";
+	    		}
+	    	},"text");
+	    },
+	    datiinseriti=function(){
+	    	if(!modificato){
+	    		var davvero=false;
+	    		$("#form_edit input,#form_edit textarea").each(function(){
+	    			if($(this).data("valore")!=$(this).val())
+	    				davvero=true;
+					});
+					if(davvero)datiinseritidavvero();
+	    	}
+	    },
+	    datiinseritidavvero=function(){
+	    	if(!modificato){
+	    		modificato=true;
+	    		$("#btn_salva").removeClass("disabled");
+	    		if(id==-1)$("#btn_pubblica").removeClass("disabled");
+	    	}
+	    },
+	    aggiungi_immagine=function(id,alt){
+	  	  $(\'<li id="immagine-\'+id+\'">\'+
+	  			\' <img src=/static/n/400/\'+id+\'.jpg>\'+
+	  			\' <input type="hidden" name="immagini[]" value="\'+id+\'">\'+
+	  			\' <input type="hidden" name="alt[]" class="alt">\'+
+	  			\' <span class="bottone small">elimina</span>\'+
+	  			\'</li>\').appendTo("#listaimmagini");
+	  		$("#immagine-"+id+" input.alt").val(alt);
+	    };
+	$("#form_edit").on("blur","input,textarea",function(){
+		focuswasmine=this;
+	}).on("keyup","input,textarea",datiinseriti);
+	$("#btn_salva").on("click",salva);
+	$("#btn_pubblica").on("click",pubblica);
+	$("#btn_elimina").on("click",function(){
+		if(confirm("Eliminare questa bozza?\nI dati inseriti verranno cancellati definitivamente."))
+			$.post("/scrivi/news/"+id+".html",{ajaxdelete:1},function(){
+				location.replace("/scrivi");
+			});
+	});
+	$("#form_edit input,#form_edit textarea").each(function(){$(this).data("valore",$(this).val());});
+	$(window).on("beforeunload",function(){
+		if(modificato)return("Ci sono delle modifiche non salvate. Se lasci questa pagina andranno perse.");
+	}).load(function(){
+		$("#form_edit input[type=\"text\"]").eq(0).focus();
+	});
+	function split(val){return val.split(/,\s*/);}
+  function extractLast(term){return split(term).pop();}
+	$("input[name=\"kws\"]").bind("keydown",function(event){if(event.keyCode===$.ui.keyCode.TAB&&$(this).data("autocomplete").menu.active)event.preventDefault();}).autocomplete({source:function(request,response){$.getJSON("kws.html",{term:extractLast(request.term)},response);},minLength:1,focus:function(){return false;},select:function(event,ui){var terms=split(this.value);terms.pop();terms.push(ui.item.value);terms.push("");this.value=terms.join(", ");return false;}});
+	
+
+
+
+
+
+	var uploader=new qq.FileUploader({
+	    element: document.getElementById("aggiungi_immagine"),
+	    allowedExtensions: ["jpg","jpeg","png","gif"],
+	    action: "/scrivi/utility/uploader.html",
+	    template: \'<div class="qq-uploader">\' + 
+	            \'<div class="qq-upload-drop-area ui-corner-all" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#525c75"></div>\' +
+	            \'<div class="qq-upload-button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="news-modifica-immagini-aggiungi-upload">+</div>\' +
+	            \'<ul id="listaimmagini"></ul>\'+
+	            \'<ul class="qq-upload-list" style="display:none"></ul>\' + 
+	         \'</div>\',
+	    onComplete: function(id, fileName, responseJSON){
+	    		if(!responseJSON["success"]){
+	    			alert("Impossibile caricare "+fileName);
+	    			return;
+	    		}
+	    		id=responseJSON["id"];
+	    		alt=fileName.substr(0,fileName.lastIndexOf(".")?fileName.lastIndexOf("."):999);
+	    		aggiungi_immagine(id,alt);
+	    		datiinseritidavvero();
+	    	},
+	    onCancel: function(id, fileName){},
+      messages: {
+          typeError: "{file} non è un\'immagine valida.\nÈ possibile caricare solo file di tipo {extensions}.",
+          sizeError: "{file} è troppo grande. Dimensione massima: {sizeLimit}.",
+          minSizeError: "{file} è troppo piccolo. Dimensione minima: {minSizeLimit}.",
+          emptyError: "{file} è vuoto e quindi non può essere caricato.",
+          onLeave: "Stai caricando dei file, se esci da questa pagina l\'upload verrà cancellato."            
+      }
+	});
+
+
+
+	$("#listaimmagini").sortable({update:datiinseritidavvero}).disableSelection().on("click",".bottone",function(){
+		if(confirm("Eliminare l\'immagine?")){
+			$(this).parent().remove();
+			datiinseritidavvero();
+		}
+	});'.$codice_immagini.'
+	
+	
+	var editor = new wysihtml5.Editor("testo", {
+    toolbar:        "toolbar",
+    parserRules:    wysihtml5ParserRules,
+    useLineBreaks:  false
+  });
+  editor.on("newword:composer",datiinseritidavvero).on("change",datiinseritidavvero);
+
+
+	
+});');
+
+M::carica(_CORPO,'
+<style type="text/css">
+#listaimmagini{
+	padding:0;
+}
+#listaimmagini li{
+	list-style:none;
+	border:1px solid #ccc;
+	display:inline-block;
+	margin:5px;
+	position:relative;
+}
+#listaimmagini img{
+	width:100px;
+}
+#listaimmagini span{
+	display:block;
+	position:absolute;
+	bottom:0;
+	right:0;
+}
+textarea{
+	width:98%;
+	height:250px;
+	resize:none;
+}
+</style>
+');

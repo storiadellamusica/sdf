@@ -1,0 +1,54 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Restituisce una versione ripulita di una stringa adatta ad essere utilizzata come componente non univoco di un URL.
+
+	>	urlizza(stringa_da_pulire);
+
+*/
+function urlizza($a){
+	return preg_replace(array("/[^a-z0-9]+/","/^_/","/_$/"),array("_","",""),str_replace(array('å','à','á','è','é','ì','í','ò','ó','ù','ú'),array('a','a','a','e','e','i','i','o','o','u','u'),strtolower(deutf8($a))));
+}
+/*
+		Restituisce l'URL relativa del contenuto (recensione, capitolo, articolo, notizia, profilo utente)
+
+	>	linka({rcsanuxg}1234);
+	>	linka(1234,{rcsanuxg});
+
+	r    recensione
+	c,s  capitolo
+	a    articolo
+	n    notizia
+	u    utente
+	x    artista
+	g    genere
+
+*/
+function linka($a,$b=null){
+	if($b==null){
+		$b=$a[0];
+		$a=substr($a,1);
+	}
+	$a=addslashes($a);
+	switch($b){
+		case "r":
+			return "/".$a.".html";
+		case "c": case "s":
+			return "/capitoli/".$a.".html";
+		case "a":
+			return "/articoli/".$a.".html";
+		case "e":
+			return "/etichette/".$a."/";
+		case "n":
+			$dati=db::query("SELECT data,titolo FROM sdmt_news WHERE id='".$a."'")->riga();
+			return "/news/3".$a."/".substr($dati['data'],6,2).'_'.$GLOBALS["nomi_mesi"][0+substr($dati['data'],4,2)].'_'.substr($dati['data'],0,4)."-".urlizza($dati['titolo']).'.html';
+		case "t":
+			return "/serie-tv/".$a.".html";
+		case "u":
+			return "/profilo/".rawurlencode(strtolower($a)).".html";
+		case "x":
+			return "/artisti/$a.html";
+		case "g":
+			return "/".url_genere(db::query("SELECT padre FROM sdml_generi WHERE url='".$a."'")->valore())."/$a.html";
+		default: return "/";
+	}
+}

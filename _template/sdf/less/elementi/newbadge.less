@@ -1,0 +1,18 @@
+.newbadge{
+	position: relative;
+	padding-right: 10px;
+	&::before{
+		content: "NEW!";
+		color: @testo;
+		.verticalgradient(#f8cb4b,#d7af3f);
+		font-weight: bold;
+		font-size: 10px;
+		.rotate(-5deg);
+		line-height: 10px;
+		padding: 2px;
+		position: absolute;
+		top:-12px;
+		right:-6px;
+		.dropshadow(2px,2px,2px,0.5);
+	}
+}

@@ -1,0 +1,28 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*! Caricamento dati e inizializzazione */
+$id=$_PARAMETRI[0];
+$dati=db::query("SELECT * FROM _sezione_news WHERE stato='pubblicato' AND id='$id'")->riga();
+if(!$dati)require _404;
+$dati["testo"]=str_replace("<br>","\n",$dati["testo"]);
+M::accendi("tre_colonne");
+/*! Metadati e title */
+$data=substr($dati["data"],8,2)."/".substr($dati["data"],5,2)."/".substr($dati["data"],0,4);
+M::titolo($data." - ".entita($dati["titolo"]));
+M::titolofacebook(entita($dati["titolo"]));
+M::descrizione(entita($dati["testo"]));
+M::keyword($dati["kws"]);
+M::immagine(img("n",400,$id));
+/*! Notizia */
+M::carica(M::modulo("box",array("flag"=>"N","titolo"=>"News // ".$data,"class"=>"corpo_news")),"<h1>".entita($dati["titolo"])."</h1><img src='".img("n",305,$id)."'><article><span class='sottotitolo'>".entita($dati["sottotitolo"])."</span>".M::modulo("twitta").M::modulo("facebook like").riformatta2($dati["testo"]).'</article>'.(empty($dati["link"])?"":'<p class="approfondimento">Per approfondire: <a href="'.$dati["link"].' target="_blank">'.$dati["link"].'</a></p>'));
+/*! Video */
+if(!empty($dati["video"]))M::modulo("youtube",array("video"=>explode(",",$dati["video"]),"dove"=>M::modulo("box",array("flag"=>"V","titolo"=>"Video","class"=>"video"))));
+/*! Potrebbero interessarti */
+M::carica(M::carica(_COLONNA2,'<h2>Potrebbero interessarti:</h2><div class="elencorecensioni"></div>'),
+	M::modulo("collegati",array("id"=>-1,"keywords"=>$dati["artista"].",".str_replace(", ",",",$dati["kws"])))
+	);
+/*! Terza colonna */
+M::modulo("call to action");
+M::modulo("box facebook");
+M::modulo("ultimi commenti");
+/*! Commenti */
+M::modulo("commenti facebook");

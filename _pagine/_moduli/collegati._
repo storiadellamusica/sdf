@@ -1,0 +1,25 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Restituisce una stringa di contenuti collegati in base ai dati forniti.
+	-	keywords: un elenco di termini chiave separati da virgola
+	Parametri opzionali:
+	-	id: l'id del contenuto principale
+	- max: il numero massimo di risultati, 15 di default
+
+*/
+if(!isset($max))$max=18;
+if(!isset($id))$id=-1;
+$risultati=array();
+$keywords=addslashes($keywords);
+foreach(db::query("SELECT sdmt_recensioni.Titolo_Disco,sdmt_recensioni.url,sdml_artista.Artista,MATCH(Titolo,sdmt_recensioni.kws) AGAINST('$keywords') AS attinenza FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE sdmt_recensioni.active=1 AND sdmt_recensioni.ID!=$id AND MATCH(Titolo,sdmt_recensioni.kws) AGAINST('$keywords') ORDER BY attinenza DESC LIMIT $max")->righe()as $r)
+		$risultati[]=array("i"=>$r["attinenza"],"contenuto"=>'<a href="'.linka("r".$r["url"]).'"><img src="'.img("r",50,$r["url"]).'"><strong>'.s($r["Titolo_Disco"]).'</strong> '.s($r["Artista"]).'</a>');
+foreach(db::query("SELECT Titolo,url,MATCH(Titolo,kws) AGAINST('$keywords') AS attinenza FROM sdmt_articoli WHERE active=1 AND ID!=$id AND MATCH(Titolo,kws) AGAINST('$keywords') ORDER BY attinenza DESC LIMIT $max")->righe()as $r)
+		$risultati[]=array("i"=>$r["attinenza"],"contenuto"=>'<a href="'.linka("a".$r["url"]).'"><img src="'.img("a",50,$r["url"]).'"><strong>'.s($r["Titolo"]).'</strong></a>');
+function ordina($a,$b){
+	return $a["i"]==$b["i"]?0:$a["i"]>$b["i"]?-1:1;
+}
+usort($risultati,"ordina");
+$return="";
+for($i=0;$i<$max&&$i<count($risultati);$i++)
+	$return.=$risultati[$i]["contenuto"];

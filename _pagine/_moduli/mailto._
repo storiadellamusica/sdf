@@ -1,0 +1,24 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Invia un e-mail. Utilizza i seguenti parametri:
+	-	dove: un selettore TLAB opzionale, viene di default inserito nella terza colonna
+
+*/
+if(is_array($destinatario)&&!isset($invii_singoli))
+	$destinatario=implode(", ",$destinatario);
+$oggetto=utf8($oggetto);
+$messaggio="<html>
+<head>
+  <title>".entita($oggetto)."</title>
+</head>
+<body>".riformatta($testo)."</body>
+</html>";
+$headers="MIME-Version: 1.0\r\n";
+$headers.="Content-type: text/html;charset=utf-8\r\n";
+$headers.="From: Storia dei Film <info@storiadeifilm.it>\r\n";
+if(is_array($destinatario))
+	foreach($destinatario as $d)
+		@mail($d,$oggetto,$messaggio,$headers);
+else
+	@mail($destinatario,$oggetto,$messaggio,$headers);

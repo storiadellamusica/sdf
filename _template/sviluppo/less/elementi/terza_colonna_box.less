@@ -1,0 +1,27 @@
+.terza_colonna_box{
+	background: desaturate(darken(@colore_b,5%),5%);
+	width: @larghezzaSidebar/2-2px*2-10px*2;
+	float: right;
+	margin: 0 -10px 10px 2px;
+	padding: 5px 10px;
+	border: 1px solid #c4c5c7;
+	.angoliArrotondati(10px);
+	h2{
+		color: @testoNegativo !important;
+		font-size: 14px !important;
+		line-height: 16px;
+		font-weight: bold;
+		padding-top: 10px;
+		margin: 0 !important;
+		a{
+			color: @testoNegativo !important;
+			text-decoration: none;
+		}
+	}
+	>div{
+		border: 1px solid #ccc;
+		.innershadow(15px,15px,15px,0.15);
+		background: #fff;
+		margin-bottom: 12px;
+	}
+}

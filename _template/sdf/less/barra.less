@@ -1,0 +1,95 @@
+div[role=toolbar]{
+	z-index: 9999;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 24px;
+	border-top: 1px solid #c5c5c5;
+	.verticalgradient(#fff,#d5d5d5);
+	a[href="http://www.storiadellamusica.it/"]{
+		display: block;
+		position: absolute;
+		z-index: 9999;
+		bottom: 0;
+		left: 0;
+		.verticalgradient(#fff,#d5d5d5);
+		height: 30px+2px*2;
+		width: 80px+4px*2;
+		overflow: hidden;
+		text-indent: -999px;
+		border: 1px solid #ccc;
+		border-bottom: none;
+		&::before{
+			content: url(/static/img/storia_della_musica.png);
+			position: absolute;
+			left: 4px;
+			top: 2px;
+			text-indent:0;
+		}
+		&:hover{
+			.verticalgradient(#eee,#fff);
+		}
+	}
+	#btnlogin{
+		position: absolute;
+		height: 18px;
+		overflow: hidden;
+		right: -4px;
+		bottom: 0;
+		img{
+			position: relative;
+			min-width: 15px;
+			top: -1px;
+			margin-right:5px;
+			.angoliArrotondati(2px);
+		}
+	}
+}
+#bglogin{
+	position: fixed;
+	left: 0;
+	bottom: 25px;
+	height: 100%;
+	width: 100%;
+	background: fade(@colore_a,50%);
+	z-index: 99;
+}
+#boxlogin{
+	border-top: 1px solid #c5c5c5;
+	border-left: 1px solid #c5c5c5;
+	min-width: 150px;
+	.verticalgradient(#d5d5d5,#fff);
+	position: absolute;
+	bottom: -1px;
+	right: 0;
+	padding: 10px 5px 5px 10px;
+  -webkit-border-top-left-radius: 5px;
+     -moz-border-top-left-radius: 5px;
+          border-top-left-radius: 5px;
+  -moz-background-clip: padding; -webkit-background-clip: padding-box; background-clip: padding-box;
+	background: #fff;
+	input{
+		display: block;
+		width: 150px;
+		outline: none;
+		border: 1px solid @colore_b;
+		.angoliArrotondati(5px);
+		margin-bottom: 5px;
+	}
+	a.registrati{
+		float: right;
+		margin: 5px;
+	}
+	button{
+		margin: 5px;
+		height: auto;
+	}
+}
+#cutenticonnessi{
+	display: block;
+	text-align: right;
+	font-size: 11px;
+	padding-top: 6px;
+	padding-right: 60px;
+}

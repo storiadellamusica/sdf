@@ -1,0 +1,154 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Template Like A Boss
+	Richiede lessc.php e Minify_CSS_Compressor.php
+	
++	append (predefinito, funziona anche senza preselettori)
+^	prepend
+> before
+<	after
+! replace (! " " per cancellare il nodo)
+
+http://www.w3schools.com/XPath/xpath%5Fsyntax.asp
+
+cis: cascading include sheets
+autocorrezione e generazione di markup HTML5 utf-8 valido
+
+define("TLAB_TEMPLATE",...
+
+*/
+class TLABnodo{
+	protected $XPath;
+	public  $DOM;
+	protected function load_cis($f){
+		$cis=file_get_contents(TLAB_TEMPLATE.$f.".cis");
+		$len=strlen($cis);
+		$selettore=$temp="";
+		$regola=false;
+		for($i=0;$i<$len;$i++)
+			switch($cis[$i]){
+				case '{':
+					$selettore=trim($temp);
+					$temp="";
+					$regola=true;
+					break;
+				case '}':
+					$this->inserisci($selettore,TLABnodo::load(trim($temp)));
+					$temp="";
+					$regola=false;
+					break;
+				case ';':
+					if($regola){
+						$this->inserisci($selettore,TLABnodo::load(trim($temp)));
+						$temp="";
+						break;
+					}
+				default:
+					$temp.=$cis[$i];
+		}
+	}
+	function __construct($contenuto="",$file=null){
+		if($file!==null)$contenuto=@file_get_contents(TLAB_TEMPLATE.$file.".html");
+		if(strpos($contenuto,"<!DOCTYPE")===false)$contenuto="<!doctype html><head></head><body>".$contenuto."</body></html>";
+		$this->DOM=new DOMDocument('1.0','utf-8');
+		@$this->DOM->loadHTML($contenuto);
+		$this->XPath=new DOMXPath($this->DOM);
+		if($file!==null&&file_exists(TLAB_TEMPLATE.$file.".cis"))$this->load_cis($file);
+	}
+	static function load($f){
+		return new TLABnodo("",$f);
+	}
+	function inserisci($selettore,$cosa){
+		if(is_object($selettore)){
+			$destinazioni=array($selettore);
+			$come="+";
+		}else{
+			$destinazioni=@$this->XPath->query(in_array($selettore[0],array("<",">","+","^","!"))?substr($selettore,1):$selettore);
+			$come=$selettore[0];
+			if(!$destinazioni->length)return false;
+		}
+		$return=false;
+		if(is_object($cosa)){
+			if(get_class($cosa)!=__CLASS__)return false;
+			$blocco=@$cosa->DOM->getElementsByTagName("body");
+			if($blocco->length)
+				foreach($blocco->item(0)->childNodes as $nodo)
+					foreach($destinazioni as $destinazione)
+						switch($come){
+							case '<':
+								$return=$destinazione->parentNode->insertBefore($this->DOM->importNode($nodo,true),$destinazione);
+								break;
+							case '>':
+								if($destinazione->nextSibling===null)
+									$return=$destinazione->parentNode->appendChild($this->DOM->importNode($nodo,true));
+								else
+									$return=$destinazione->parentNode->insertBefore($this->DOM->importNode($nodo,true),$destinazione->nextSibling);
+								break;
+							case '^':
+								if($destinazione->firstChild===null)
+									$return=$destinazione->appendChild($this->DOM->importNode($nodo,true))	;
+								else
+									$return=$destinazione->insertBefore($this->DOM->importNode($nodo,true),$destinazione->firstChild);
+								break;
+							case '!';
+								$destinazione->parentNode->replaceChild($return=$this->DOM->importNode($nodo,true),$destinazione);
+								break;
+							default:
+								$return=$destinazione->appendChild($this->DOM->importNode($nodo,true));
+						}
+		}else
+			if(is_string($cosa))
+				$return=$this->inserisci($selettore,new TLABnodo($cosa));
+		return $return;
+	}
+	private function contenuto($n) {    
+		$temp="";
+		if(!empty($n->childNodes))
+			foreach($n->childNodes as $c)
+				if($c->nodeType==XML_TEXT_NODE)
+					$temp.=$c->nodeValue;
+				else{
+					$temp.="<".$c->nodeName;
+					if(!empty($c->attributes))
+						foreach($c->attributes as $a)
+							$temp.=" ".$a->nodeName."='".$a->nodeValue."'";
+					$temp.=">";
+					if(($cont=$this->contenuto($c))!="")
+						$temp.=$cont."</".$c->nodeName.">";
+				}
+		return $temp;
+	}
+	function out($cosa=null){
+		header('Content-Type: text/html; charset=utf-8');
+		if($cosa==null){
+			header("X-UA-Compatible: IE=edge,chrome=1");
+			echo($this->DOM->saveHTML());
+		}else{
+			foreach(@$this->XPath->query($cosa)as $nodo)
+				echo(trim($this->contenuto($nodo)));
+		}	
+	}
+}
+class TLAB extends TLABnodo{
+	function __construct($contesto=""){
+		if(!defined("DEBUG")&&file_exists(TLAB_TEMPLATE.".cache/index_".$contesto.".html")){
+			parent::__construct("",".cache/index_".$contesto);
+		}else{
+			parent::__construct("","index");
+			if($contesto!=""&&file_exists(TLAB_TEMPLATE.$contesto.".cis"))$this->load_cis($contesto);
+			foreach($this->XPath->query('head/link[@rel="stylesheet"]')as $link){
+				$nomeless=$link->getAttribute("href");
+				if(substr($nomeless,-5)==".less"&&file_exists(TLAB_TEMPLATE.$nomeless)){
+					$nomecss="css/".substr(basename($nomeless),0,-4).@end(explode(DS,substr(TLAB_TEMPLATE,0,-1))).".css";
+					if(defined("DEBUG")||!file_exists((_MEDIA.$nomecss))){
+						$lessc=new lessc(TLAB_TEMPLATE.$nomeless);
+						file_put_contents(_MEDIA.$nomecss,Minify_CSS_Compressor::process($lessc->parse()));
+					}
+					$link->setAttribute("href",_URL_MEDIA.$nomecss);
+				}
+			}
+			if(!file_exists(TLAB_TEMPLATE.".cache"))mkdir(TLAB_TEMPLATE.".cache");
+			file_put_contents(TLAB_TEMPLATE.".cache".DS."index_".$contesto.".html",$this->DOM->saveHTML());
+		}
+	}
+}

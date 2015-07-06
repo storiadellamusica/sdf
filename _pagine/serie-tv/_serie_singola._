@@ -1,0 +1,95 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*! Caricamento dati e inizializzazione */
+include_once(_CLASSI."imdbphp".DS."imdb.class.php");
+$id=end($_PARAMETRI);
+$dati=db::query("SELECT
+_sezione_serietv.id,
+_sezione_serietv.titolo,
+_sezione_serietv.stagioni,
+_sezione_serietv.episodi,
+generi1.sezione_id AS padre1,
+generi1.Genere AS genere1,
+_sezione_serietv.genere1 AS id_genere1,
+generi2.sezione_id AS padre2,
+generi2.Genere AS genere2,
+_sezione_serietv.genere2 AS id_genere2,
+generi3.sezione_id AS padre3,
+generi3.Genere AS genere3,
+_sezione_serietv.genere3 AS id_genere3,
+_sezione_serietv.kws,
+_sezione_serietv.testo,
+_sezione_serietv.plot,
+_sezione_serietv.voto,
+sdml_etichetta.Etichetta AS casa,
+_sezione_serietv.anno,
+sdml_recensore.ID_user AS id_recensore,
+sdml_recensore2.ID_user AS id_recensore2,
+_sezione_serietv.recensore AS id_recensore_alias,
+_sezione_serietv.recensore2 AS id_recensore2_alias,
+sdml_recensore.Recensore AS nome_recensore,
+sdml_recensore2.Recensore AS nome_recensore2,
+phpbb_users.username AS nick_recensore,
+phpbb_users2.username AS nick_recensore2,
+_sezione_serietv.imdb,
+_sezione_serietv.youtube,
+_sezione_serietv.mailto AS iscritti
+FROM _sezione_serietv
+LEFT JOIN sdml_recensore ON sdml_recensore.ID=_sezione_serietv.recensore
+LEFT JOIN sdml_recensore AS sdml_recensore2 ON sdml_recensore2.ID=_sezione_serietv.recensore2
+LEFT JOIN sdml_generi AS generi1 ON generi1.ID=_sezione_serietv.genere1
+LEFT JOIN sdml_generi AS generi2 ON generi2.ID=_sezione_serietv.genere2
+LEFT JOIN sdml_generi AS generi3 ON generi3.ID=_sezione_serietv.genere3
+LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=_sezione_serietv.produttore
+LEFT JOIN phpbb_users ON sdml_recensore.ID_user=phpbb_users.user_id
+LEFT JOIN phpbb_users AS phpbb_users2 ON sdml_recensore2.ID_user=phpbb_users2.user_id
+WHERE _sezione_serietv.stato='pubblicato' AND _sezione_serietv.url LIKE '%/$id'")->riga();
+if(!$dati)require _404;
+/*
+$imdb=new imdb($dati["imdb"]);
+$imdb->setid($dati["imdb"]);
+$stagioni=$imdb->seasons();
+$listaepisodi=$imdb->episodes();
+$episodi=0;
+foreach($listaepisodi as $stagione)
+	$episodi+=count($stagione);
+*/
+$stagioni=$dati["stagioni"];
+$episodi=$dati["episodi"];
+M::accendi("tre_colonne");
+/*! Speciali */
+if($dati["articolo_padre"])M::modulo("speciali",array("sezione"=>"a","id"=>$dati["articolo_padre"]));
+M::modulo("speciali",array("sezione"=>"x","id"=>$dati["id_artista"]));
+/*! Metadati e title */
+M::titolo("Recensione: ".$dati["artista"]." - ".$dati["titolo"]);
+M::titolofacebook($dati["artista"]." - ".$dati["titolo"]);
+M::descrizione($dati["testo"]);
+M::keyword($dati["keywords"]);
+M::immagine(img("t",400,$id));
+/*! Video */
+if($dati["youtube"])
+	M::modulo("youtube",array("video"=>explode(",",$dati["youtube"]),"dove"=>M::modulo("box",array("flag"=>"V","titolo"=>"Video","class"=>"video"))));
+/*! Recensione */
+$parti_trama=explode("#",$dati["plot"]);
+$trama=preg_replace("#<.p>$#","",riformatta(array_shift($parti_trama))).(count($parti_trama)?" <span id='mostra_spoiler' class='bottone small'>mostra spoiler</span><\p><div class='spoiler'>".riformatta(implode("",$parti_trama))."</div>":"<\p>");
+M::carica(M::modulo("box",array("flag"=>"R","titolo"=>"Recensione")),'<article class="corpo_recensione" itemscope itemtype="http://data-vocabulary.org/Review"><span data-voto="'.$dati["voto"].'" itemprop="rating" itemscope itemtype="http://data-vocabulary.org/Rating"><strong itemprop="value">'.$dati["voto"]."</strong><meta itemprop='best' content='10'>/10</span><h1 itemprop='itemreviewed'>{$dati["titolo"]} <em>({$dati["casa"]}, {$dati["anno"]})</em></h1><a href='/".url_genere($dati["padre1"])."/".urlizza($dati["genere1"])."/' class='nastro ".coloregenere($dati["padre1"])."'>{$dati["genere1"]}</a><div class='autore'>recensione di <a href='".linka("u".$dati["nick_recensore"])."' itemprop='reviewer'>{$dati["nome_recensore"]}</a>".($dati["id_recensore2_alias"]?" e <a href='".linka("u".$dati["nick_recensore2"])."'>{$dati["nome_recensore2"]}</a>":"")."<div class='trama'>$trama</div></div>".riformatta($dati["testo"]).M::modulo("twitta").M::modulo("facebook like").'</article>');
+/*! Informazioni sul film */
+$generi="";
+for($i=1;$i<4;$i++)
+	if($dati["padre$i"])$generi.='<a href="/'.url_genere($dati["padre$i"])."/".urlizza($dati["genere$i"]).'/">'.$dati["genere$i"].'</a> ';
+if(!empty($generi))$generi="<div class='generi'>$generi</div>";
+$siti="";//"<div class='collegamenti'>"._amazon_link($dati["titolo"])."</div>";
+M::carica(M::carica(_COLONNA3,"<div class='cornice'><img src='".img("t",215,$id)."'></div><h2>Episodi:</h2><div class='info_film'></div>"),"<div class='datitecnici'><a href='#episodi'>$episodi episodi in $stagioni stagioni</a></div>$generi$siti");
+M::modulo("call to action");
+M::modulo("box facebook");
+/*! Dello stesso recensore */
+if($dati["id_recensore2_alias"]){
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore_alias"],"nome"=>$dati["nome_recensore"],"max"=>5));
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore2_alias"],"nome"=>$dati["nome_recensore2"],"max"=>5));	
+}else
+	M::modulo("dello stesso autore",array("id"=>"r".$dati["id"],"autore"=>$dati["id_recensore_alias"],"nome"=>$dati["nome_recensore"]));
+/*! Potrebbero interessarti */
+M::carica(M::carica(_COLONNA2,'<h2>Potrebbero interessarti:</h2><div class="elencorecensioni"></div>'),
+	M::modulo("collegati",array("id"=>$dati["id"],"keywords"=>$dati["artista"].",".$dati["titolo"].",".str_replace(", ",",",$dati["keywords"])))
+	);
+/*! Commenti */
+M::modulo("commenti",array("sezione"=>"t","id"=>$dati["id"],"votiutenti"=>$votiutenti,"autore"=>$dati["id_recensore"],"autore2"=>$dati["id_recensore2"],"iscritti"=>$dati["iscritti"],"titolo"=>$dati["artista"]." - ".$dati["titolo"]));

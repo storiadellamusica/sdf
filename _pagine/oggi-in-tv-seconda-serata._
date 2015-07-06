@@ -1,0 +1,19 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Oggi in TV - Seconda serata");
+M::modulo("colonne standard");
+/*! Corpo principale */
+/*!   Adesso in tv */
+$contenitore=M::modulo("box",array("flag"=>"T","titolo"=>"Questa sera in TV","class"=>"elencotv"));
+M::carica($contenitore,'<h1 class="intestazione">I film in TV oggi in seconda serata<br><a href="/adesso-in-tv.html" class="bottone small">film in onda adesso</a>  <a href="/oggi-in-tv-prima-serata.html" class="bottone small">film in prima serata</a></h1>');
+$sky=new sky();
+foreach($sky->get_second_time() as $canale=>$film){
+	if($recensione=db::query("SELECT url,voto,Text FROM sdmt_recensioni WHERE url LIKE '%-".urlizza($film->title)."(%'")->riga())
+		M::carica(
+		$contenitore,
+		"<a href='".linka("r".$recensione["url"])."'>".'<img src="'.img("r",100,$recensione["url"]).'" class="locandinainterna"><h1>'.$film->title."<span data-voto='".$recensione["voto"]."'><strong>".$recensione["voto"]."</strong>/10</span><div>in onda dalle ".$film->starttime." su <em>".$sky->channels[$canale]->name."</em></div></h1>".anteprimaTesto($recensione["Text"],200)."</a>");
+	else
+		M::carica(
+		$contenitore,
+		"<div>".($film->thumbnail_url&&$film->thumbnail_url!="#"?'<img src="http://guidatv.sky.it/app/guidatv/images'.$film->thumbnail_url.'">':"")."<h1>".$film->title."<div>in onda dalle ".$film->starttime." su <em>".$sky->channels[$canale]->name."</em></div></h1>".anteprimaTesto($film->description,150)."</div>");
+}

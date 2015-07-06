@@ -1,0 +1,12 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo per l'inserimento degli ultimi commenti
+	Accetta come parametri opzionali:
+	-	dove: un selettore TLAB per indicare in che punto inserirlo. Di default va nella terza colonna
+
+*/
+M::carica(
+	M::carica(isset($dove)?$dove:_COLONNA3,'<h2>Ultimi commenti:</h2><div id="ultimi_commenti"></div>'),
+	"SELECT c.Type,c.ID,c.text,c.ID_user,sdmt_articoli.url AS urla,sdmt_recensioni.url AS urlr,_sezione_serietv.url AS urlt,username FROM sdmt_comments AS c LEFT JOIN sdmt_articoli ON sdmt_articoli.ID=ID_obj && c.type='a' LEFT JOIN sdmt_recensioni ON sdmt_recensioni.ID=ID_obj && c.type='r' LEFT JOIN _sezione_serietv ON _sezione_serietv.id=ID_obj && c.type='t' JOIN phpbb_users ON user_id=c.ID_user WHERE c.ID IN (SELECT MAX(ID) FROM sdmt_comments GROUP BY ID_obj) AND c.text!='' ORDER BY c.ID DESC LIMIT 8",
+	'<div><a href="{linka,{Type}{urla}{urlr}{urlt}}#commento-{ID}"><img src="{img,{Type},50,{urla}{urlr}{urlt}}" alt="">{text,40}</a> di <a href="{linka,u{username}}">{s,{username}}</a></div>');

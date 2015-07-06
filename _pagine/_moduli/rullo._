@@ -1,0 +1,17 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo per l'inserimento del rullo dei 15 dischi migliori dell'anno
+	Richiede come parametri:
+	-	anno: l'anno da presentare
+	Accetta come parametri opzionali:
+	-	dove: un selettore TLAB per indicare in che punto della pagina inserire il rullo
+
+*/
+$anno=2012;
+M::carica(
+	M::carica(
+		M::modulo("box",array("dove"=>isset($dove)?$dove:_CORPO,"flag"=>"R","titolo"=>"I migliori film del $anno","id"=>"rullo","class"=>"tuttapagina")),
+		"<div></div>"),
+	"(SELECT sdmt_recensioni.*, ((sdmt_recensioni.voto + (sdmt_voti.value / sdmt_voti.tot)) / 2) AS 'voto_complessivo' FROM sdmt_recensioni JOIN (select ID, sum(value) as value, COUNT(value) as tot, tipo, ID_obj, ID_user from sdmt_voti_new where tipo='r' and ID_user NOT IN("._CONFIG_VOTE_BAN_LIST.") group by ID_obj order by ID_obj) as sdmt_voti ON sdmt_voti.ID_obj=sdmt_recensioni.ID WHERE YEAR(sdmt_recensioni.Uscita)='$anno'  AND sdmt_voti.tipo='r' AND active=1) UNION (SELECT sdmt_recensioni.*, sdmt_recensioni.voto AS 'voto_complessivo' FROM sdmt_recensioni WHERE YEAR(sdmt_recensioni.Uscita)='$anno'  AND ID NOT IN (SELECT sdmt_recensioni.ID FROM sdmt_recensioni JOIN (select ID, sum(value) as value, COUNT(value) as tot, tipo, ID_obj, ID_user from sdmt_voti_new where tipo='r' and ID_user NOT IN("._CONFIG_VOTE_BAN_LIST.") group by ID_obj order by ID_obj) as sdmt_voti ON sdmt_voti.ID_obj=sdmt_recensioni.ID WHERE YEAR(sdmt_recensioni.Uscita)='$anno'  AND sdmt_voti.tipo='r' AND active=1) AND active=1) ORDER BY voto_complessivo DESC LIMIT 15",
+	'<a href="{linka,r{url}}"><img src="{img,r,180,{url}}" alt="{s,{Titolo_Disco}}" class="reflect"></a>');

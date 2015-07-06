@@ -1,0 +1,17 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::modulo("estrai numero pagina");
+define("VOTI_PER_PAGINA",16);
+$totali=db::query("SELECT COUNT(*) FROM sdmt_voti_new WHERE tipo='r' AND ID_user=".$dati["user_id"])->valore();
+$pagine_totali=ceil($totali/VOTI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="Voti di ".$dati["username"]." (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"V","titolo"=>$titolo,"class"=>"elencovoti"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+		"SELECT 
+sdml_artista.Artista,data_disco,sdml_etichetta.Etichetta,sdmt_recensioni.url,Titolo_disco,value FROM sdmt_voti_new JOIN sdmt_recensioni ON sdmt_recensioni.ID=ID_obj JOIN sdml_artista ON sdml_artista.ID=sdmt_recensioni.Artista LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta WHERE sdmt_voti_new.tipo='r' AND ID_user={$dati["user_id"]} ORDER BY sdmt_voti_new.ID DESC LIMIT ".(($_NUMERO_PAGINA-1)*VOTI_PER_PAGINA).",".VOTI_PER_PAGINA,
+	'<a href="{linka,r{url}}#voti"><img src="{img,r,50,{url}}" alt=""><span data-voto="{value}"><strong>{value}</strong>/10</span><h1>{s,{Titolo_disco}}<div>di {s,{Artista}} ({s,{Etichetta}} {data_disco})</div></h1></a>');

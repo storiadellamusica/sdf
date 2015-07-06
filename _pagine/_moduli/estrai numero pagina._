@@ -1,0 +1,8 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Estrae dai parametri dell'url il numero della pagina attuale e lo salva in $_NUMERO_PAGINA
+
+*/
+global $_PARAMETRI,$_NUMERO_PAGINA;
+$_NUMERO_PAGINA=count($_PARAMETRI)&&preg_match("#^pagina-[0-9]+$#",end($_PARAMETRI))?str_replace("pagina-","",array_pop($_PARAMETRI)):1;

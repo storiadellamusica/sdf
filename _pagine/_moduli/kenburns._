@@ -1,0 +1,15 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Modulo per l'inserimento di slide show ken burns
+	Richiede come parametri:
+	-	dove: un selettore TLAB per indicare in che punto inserire lo slide show
+	- img, titoli e url: degli array contenti i dati da visualizzare.
+	Parametri opzionali:
+	- class: una classe CSS aggiuntiva.
+
+*/
+$n=$GLOBALS["_modulo_ken_burns_contatore"]=isset($GLOBALS["_modulo_ken_burns_contatore"])?$GLOBALS["_modulo_ken_burns_contatore"]+1:0;
+if(!$n)M::carica("^body","<script>\nvar ken_immagini=new Array(),ken_titoli=new Array(),ken_url=new Array();\n</script>");
+M::carica(
+	$dove,'<a class="kenbox'.(isset($class)?' '.$class:"").'" id="kenbox_'.$n."\" href=\"#\"><script>\nken_immagini[$n]=[".implode(",",$img)."];\nken_titoli[$n]=[".implode(",",$titoli)."];\nken_url[$n]=[".implode(",",$url)."];\n</script></a>");

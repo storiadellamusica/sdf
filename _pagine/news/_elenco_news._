@@ -1,0 +1,15 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("NEWS_PER_PAGINA",11);
+$totali=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='pubblicato'")->valore();
+$pagine_totali=ceil($totali/NEWS_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="News";
+M::accendi("tre_colonne");
+M::titolo("News");
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"N","titolo"=>$titolo,"class"=>"elenconews"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+	"SELECT id,titolo,data,testo,phpbb_users.nome FROM _sezione_news LEFT JOIN phpbb_users ON autore=user_id WHERE stato='pubblicato' ORDER BY data DESC,modificata DESC LIMIT ".(($_NUMERO_PAGINA-1)*NEWS_PER_PAGINA).",".NEWS_PER_PAGINA,
+	'<a href="/news/{id}/{formattadata_news,{data}}-{urlizza,{titolo}}.html"><img src="{img,n,90,{id}}" alt="{s,{titolo}}"><h1>{substr,{data},8,2}/{substr,{data},5,2}/{substr,{data},0,4} // {titolo,999}</h1><strong>di {nome}</strong>{testo,100} <em>&raquo;</em></a>');

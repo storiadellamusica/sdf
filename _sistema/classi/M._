@@ -1,0 +1,192 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Motore - Creazione rapida di una pagina.
+	Per maggiori informazioni su TLAB vedi TLAB.php
+	
+>	M::accendi(contesto)
+		Carica il template TLAB relativo al contesto e si prepara per gestirlo
+
+>	M::accendi(contesto, cosa)
+		Carica il template TLAB relativo al contesto, si prepara per gestirlo e preimposta "cosa" come nodo padre dell'output della pagina
+	
+>	M::carica(dove,cosa,come[,incasodinserimento])
+		Ottiene dei dati dal database, li formatta, e li inserisce nella pagina:
+		-	"dove" è un selettore o un nodo TLAB;
+		- "cosa" è una query MySQL al database;
+		- "come" è un pattern d'inserimento (vedi sotto);
+		-	"incasodinserimento", opzionale, viene aggiunto "dove" prima del contenuto generato.
+		Restituisce l'ultimo nodo padre inserito o false se la query non ha dato risultati.
+
+>	M::carica(dove,cosa)
+		Ottiene dei dati dal database, li formatta, e li inserisce nella pagina:
+		-	"dove" è un selettore o un nodo TLAB;
+		- "cosa" è un pattern d'inserimento (vedi sotto).
+		Restituisce l'ultimo nodo padre inserito.
+
+>	M::modulo(id_modulo,variabili)
+		Carica lo script _moduli/id_modulo._ passando le variabili descritte dalle chiavi dell'array opzionale variabili con i rispettivi valori dei valori dell'array.
+		Restituisce un valore definito dal modulo, passato tramite la varibile $return.
+
+>	M::titolo(titolo)
+		Aggiunge una stringa (separata da " - " dal resto del titolo) alla fine del titolo utilizzato per il tag title e per il metatag og:title
+
+>	M::keyword(keyword)
+		Aggiunge una keyword nei metatag della pagina
+		
+>	M::descrizione(descrizione)
+		Imposta la descrizione della pagina usata dai metatag description e og:description
+
+>	M::immagine(descrizione)
+		Imposta una og:img diversa da quella predefinita per la condivisione su facebook
+
+>	M::spegni()
+		Disattiva l'output automatico della pagina.
+
+>	M::parti()
+		Esegue l'output della pagina e spegne il M.
+		L'output viene in ogni caso generato automaticamente al termine dell'esecuzione degli script quando è stato invocato il metodo M::accendi(), quindi nella maggior parte dei casi questo metodo non è necessario.
+
+>	M::parti(selettore)
+		Esegue l'output del contenuto dei nodi "selettore" della pagina e spegne il M. (utile ad esempio per creare blocchi di codice per AJAX)
+		Selettore è un selettore XPath (cioè un selettore TLAB senza il carattere iniziale di azione).
+
+*	PATTERN:
+		Un pattern è un codice html valido (viene poi utilizzato da TLAB, quindi il codice viene corretto automaticamente in caso di problemi) contente delle istruzioni per il M.
+		Le istruzioni sono racchiuse tra parentesi graffe {}.
+		Il carattere | viene utilizzato come carattere di escape.
+		Esistono tre formati principali:
+		- {colonna}
+			Si ottiene il valore del campo "colonna" restituito dalla query "dove"
+		- {colonna,123}
+			Si ottiene il valore del campo "colonna" restituito dalla query "dove", tagliato a "123" caratteri. Questo comando è una scorciatoia per {anteprimaTesto,{colonna},123}
+		- {funzione,pattern[,pattern2[,pattern3[...]]]}
+			Si ottiene il risultato della funzione "funzione" con come parametri i pattern che seguono "funzione," separati da virgola.
+			Prima di essere passati come parametri, i pattern vengono valutati ricorsivamente come pattern.
+			È quindi possibile chiamare più funzioni una dentro l'altra:
+				{strtolower,{str_replace, ,_,{nome}}} equivale a strtolower(str_replace(" ","_",valore_della_colonna_nome))
+			Attenzione: essendo dei pattern, è necessario utilizzare le graffe {} per identificare una colonna. Ad esempio:
+				{funzione,nome} equivale a funzione("nome")
+				{funzione,{nome}} equivale a funzione(valore_della_colonna_nome)
+			Se fosse necessario utilizzare i caratteri {}, come valori letterali, è possibile utilizzare il carattere di escape | in questo modo: |{ |} |,
+			Il carattere | forza il M a considerare come letterale il carattere che lo segue.
+			Per utilizzare il carattere | come carattere letterale, occorre quindi scrivere ||
+			
+		
+2do:
+- Documentazione delle funzioni meta
+
+*/
+class M{
+	static $TLAB,$database,$output=true,$spento=true,$outputcosa=null,$titolo=_DEFAULT_TITOLO,$titolofacebook=_DEFAULT_TITOLO,$descrizione=_DEFAULT_DESCRIZIONE,$keywords=array(_DEFAULT_KEYWORDS),$immagine=_DEFAULT_IMMAGINE;
+	static function accendi($contesto="",$outputcosa=null){
+			if(self::$spento)self::$database=new db;
+			self::$TLAB=new TLAB($contesto);
+			self::$outputcosa=$outputcosa;
+			if(self::$spento)register_shutdown_function("M::parti");
+			self::$output=true;
+			self::$spento=false;
+	}
+	static function carica($dove,$cosa,$come=null,$incasodinserimento=""){
+		$tmp="";
+		if($come==null)
+			$tmp=$cosa;
+		else
+			foreach(self::$database->query($cosa)->righe()as $riga)
+				$tmp.=self::tratta($riga,$come);
+		return $tmp==""?false:self::$TLAB->inserisci($dove,$incasodinserimento.$tmp);
+	}
+	static function modulo($id_modulo,$argomenti=array()){
+		foreach($argomenti as $variabile=>$valore)
+			$$variabile=$valore;
+		$id_modulo=str_replace("/",DS,$id_modulo);
+		if(_ADDETTO_AI_LAVORI&&file_exists(_CANTIERE._MODULI.$id_modulo._))
+			require _CANTIERE._MODULI.$id_modulo._;
+		elseif(file_exists(_PAGINE._MODULI.$id_modulo._))
+			require _PAGINE._MODULI.$id_modulo._;
+		if(isset($return))return $return;
+	}
+	static function titolo($titolo,$suffisso=true){
+		self::$titolo=$titolo.($suffisso?_DEFAULT_SUFFISSO_TITOLO:"");
+		self::$titolofacebook=$titolo;
+	}
+	static function titolofacebook($titolo){
+		self::$titolofacebook=$titolo;
+	}
+	static function keyword($keyword){
+		self::$keywords[]=anteprimaTesto($keyword);
+	}
+	static function descrizione($descrizione){
+		self::$descrizione=anteprimaTesto($descrizione);
+	}
+	static function immagine($url){
+		self::$immagine=$url;
+	}
+	static function spegni(){
+		self::$output=false;
+	}
+	static function parti($cosa=null){
+		if(empty($cosa)&&empty(self::$outputcosa))self::modulo("speciali");
+		self::$TLAB->inserisci("!head/title","<title>".self::$titolo.'</title>');
+		self::$TLAB->inserisci(">head/title",'<meta name="description" content="'.htmlentities(self::$descrizione,ENT_QUOTES,"utf-8").'"><meta name="keywords" content="'.implode(", ",self::$keywords).'">');
+		if(stripos($_SERVER["HTTP_USER_AGENT"],'facebook')!==false)
+			self::$TLAB->inserisci(">head/title",'<meta property="og:type" content="website"><meta property="og:image" content="http://'.$_SERVER["SERVER_NAME"]._URL_MEDIA.str_replace(_URL_MEDIA,"",self::$immagine).'"><meta property="og:description" content="'.self::$descrizione.'"><meta property="og:title" content="'.self::$titolofacebook.'"><meta property="og:url" content="http://'.$_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"].'"><meta property="fb:admins" content="'._FB_ADMINS.'">');
+		self::$output&&self::$TLAB->out($cosa==null?(self::$outputcosa):$cosa);
+		self::spegni();
+	}
+	private static function tratta($riga,$pattern){
+		$temp="";
+		$p=array();
+		$parentesi=0;
+		$len=strlen($pattern);
+		for($i=0;$i<$len;$i++)
+			switch($pattern[$i]){
+				case "|":
+					$i++;
+					if(count($p))
+						$p[count($p)-1].=$pattern[$i];
+					else
+						$temp.=$pattern[$i];
+					break;
+				case "{":
+					$parentesi++;
+					if(count($p))
+						$p[count($p)-1].="{";
+					else
+						$p[]="";
+					break;
+				case "}":
+					if(--$parentesi){
+						$p[count($p)-1].="}";
+						break;
+					}else
+						switch(count($p)){
+						case 1:
+							$temp.=$riga[$p[0]];
+							break;
+						case 2:
+							if(is_numeric($p[1])){
+								$temp.=anteprimaTesto($riga[$p[0]],$p[1]);
+								break;
+							}
+						default:
+							$e=array();
+							for($j=1;$j<count($p);$j++)
+								$e[]='"'.str_replace('"','\\"',self::tratta($riga,$p[$j])).'"';
+							$temp.=eval("return ".$p[0].'('.implode(",",$e).");");
+					}
+					$p=array();
+					break;
+				case ",":
+					if($parentesi==1){
+						$p[]="";
+						break;
+					}
+				default:
+					if(count($p))
+						$p[count($p)-1].=$pattern[$i];
+					else
+						$temp.=$pattern[$i];
+			}
+		return $temp;
+	}
+}

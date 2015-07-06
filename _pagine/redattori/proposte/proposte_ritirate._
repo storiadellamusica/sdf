@@ -1,0 +1,14 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("DEBUG",1);
+M::accendi("redazione_proposte_tabella");
+M::carica("<//table",'<ul class="hredazione">
+<li>
+	<a href="/redazione.html">Redazione</a>
+</li>
+<li>
+	<a href="prova" class="espandibile">Proposte</a>
+<li>
+	<span>Proposte ritirate<span><a href="/redazione/proposte/proposte_in_discussione.html">Proposte in discussione</a><a href="/redazione/proposte/cose_da_fare.html">Cose da fare</a><a href="/redazione/proposte/missioni_compiute.html">Missioni compiute</a><a href="/redazione/proposte/nuova.html">Nuova proposta</a><span></span>
+</li>
+</ul>');
+M::carica("<body/script[last()]",script(3));

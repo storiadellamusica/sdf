@@ -1,0 +1,4 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("redazione_proposte_tabella");
+M::carica("<//table","<h2 class='hredazione'>Cose da fare</h2>");
+M::carica("<body/script[last()]",script(1));

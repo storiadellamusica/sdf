@@ -1,0 +1,22 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Inserisce nella terza colonna dieci recensioni a caso di autore. Richiede:
+	- autore: l'id recensore dell'autore
+	- nome: il nome dell'autore
+	Opzionali:
+	- id: l'id del contenuto per evitare duplicati
+	- max: il numero massimo di risultati
+
+*/
+if(!isset($id))$id="r-1";
+if(!isset($max))$max=10;
+$id_r=$id[0]=="r"?substr($id,1):-1;
+$id_a=$id[0]=="a"?substr($id,1):-1;
+$bibliografia=db::query("SELECT * FROM (SELECT 'r' AS tipo,sdmt_recensioni.url AS url,CONCAT('<strong>',sdmt_recensioni.Titolo_Disco,'</strong> ',sdml_artista.Artista) AS titolo FROM sdmt_recensioni JOIN sdml_artista ON sdml_artista.ID=sdmt_recensioni.Artista WHERE sdmt_recensioni.active=1 AND (sdmt_recensioni.Recensore=$autore OR sdmt_recensioni.Recensore2=$autore) AND sdmt_recensioni.ID!=$id_r) AS recensioni UNION (SELECT 'a' AS tipo,url AS url,CONCAT('<strong>',Titolo,'</strong>') AS titolo FROM sdmt_articoli WHERE active=1 AND (Recensore=$autore OR Recensore2=$autore) AND ID!=$id_a) ORDER BY RAND() LIMIT $max")->righe();
+if($bibliografia){
+	$tmp="";
+	foreach($bibliografia as $b)
+		$tmp.='<a href="'.linka($b["tipo"].$b["url"]).'"><img src="'.img($b["tipo"],25,$b["url"]).'">'.$b["titolo"].'</a>';
+	M::carica(_COLONNA3,"<h2>Di $nome:</h2><div class='dellostessoscrittore'>$tmp</div>");
+}

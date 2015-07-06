@@ -1,0 +1,16 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("RECENSIONI_PER_PAGINA",9);
+$totali=db::query("SELECT COUNT(*) FROM _sezione_serietv WHERE stato='pubblicato'")->valore();
+if(!$totali)require _404;
+$pagine_totali=ceil($totali/RECENSIONI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo="Recensioni serie TV (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"R","titolo"=>$titolo,"class"=>"elencorecensioni"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+	"SELECT _sezione_serietv.*,sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS nome_produttore FROM _sezione_serietv LEFT JOIN sdml_generi ON sdml_generi.ID=_sezione_serietv.genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=_sezione_serietv.produttore WHERE stato='pubblicato' ORDER BY data_recensione DESC, ID DESC LIMIT ".(($_NUMERO_PAGINA-1)*RECENSIONI_PER_PAGINA).",".RECENSIONI_PER_PAGINA,
+	'<a href="{linka,t{url}}"><img src="{img,t,135,{url}}" alt="{s,{titolo}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{titolo}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>({s,{nome_produttore}}, {anno})</div></h1>{testo,180}</a>');

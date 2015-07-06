@@ -1,0 +1,10 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::modulo("estrai numero pagina");
+if(!count($_PARAMETRI))
+	require "_elenco_articoli"._;
+elseif(count($_PARAMETRI)==2&&is_numeric($_PARAMETRI[1])&&$_PARAMETRI[0]=="di"&&$nome=db::query("SELECT username FROM phpbb_users WHERE user_id={$_PARAMETRI[1]}")->valore()){
+		$titolo="Articoli di $nome";
+		$criterio="(Recensore IN (SELECT ID FROM sdml_recensore WHERE ID_user={$_PARAMETRI[1]}) OR Recensore2 IN (SELECT ID FROM sdml_recensore WHERE ID_user={$_PARAMETRI[1]}))";
+		require "_elenco_articoli"._;
+}else
+	require "_articolo_singolo"._;

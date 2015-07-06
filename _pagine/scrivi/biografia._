@@ -1,0 +1,4 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+$id=db::query("SELECT ID FROM sdml_artista WHERE url LIKE '{$_PARAMETRI[0]}'")->valore();
+if(!$id)require _404;
+header("Location: /sys/admin/edit_biografia.php?id=".$id);

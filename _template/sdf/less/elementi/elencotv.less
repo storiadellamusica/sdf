@@ -1,0 +1,63 @@
+.box.elencotv>div{
+	>div,>a{
+		clear: both;
+		overflow: hidden;
+		display:block;
+		padding: 15px 9px 15px 17px;
+		color: @testo;
+		border-top: 1px solid #eee;
+		&:hover{
+			color: @testo;
+			text-decoration: none;
+		}
+	}
+	>div:first-child,>a:first-child{
+		border-top: 0;
+	}
+	img{
+		float: right;
+		height: 100px;
+		margin-left: 40px;
+		.dropshadow(0,0,2px,0.2);
+	}
+	img.locandinainterna{
+		width: 67px;
+	}
+	h1{
+		margin: 0 0 5px 3px;
+		font-size: 14px;
+		font-weight: bold;
+		color: @colore_a;
+		>div{
+			margin: 5px 0 5px -2px;
+			font-weight: bold;
+			font-size: 12px;
+			color:@titoletto;
+		}
+	}
+	em{
+		color: @colore_b;
+	}
+	.prenotarece{
+		font-style: italic;
+		padding-top: 10px;
+		color: @colore_a;
+		a{
+			font-style: normal;
+			margin-left: 10px;
+		}
+	}
+	[data-voto]{
+		float:right;
+		margin-right: -20px;
+	}
+	h1.intestazione{
+		padding: 10px;
+		font-size: 14px;
+		text-align: center;
+		line-height: 30px;
+		.bottone{
+			margin: 0 10px;
+		}
+	}
+}

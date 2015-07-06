@@ -1,0 +1,8 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Inserisce un box commenti di facebook per la pagina
+
+*/
+M::carica(M::modulo("box",array("flag"=>"C","titolo"=>"Commenti","class"=>"tuttapagina")),
+	'<div class="fb-comments" data-href="http://www.storiadellamusica.it/'._URL.'" data-num-posts="10" data-width="915"></div>');

@@ -1,0 +1,12 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Profilo di ".$dati["username"]);
+M::modulo("colonne standard");
+M::carica(M::modulo("box",array("flag"=>"P","titolo"=>"Profilo di ".$dati["username"],"class"=>"userprofile")),"<img src='".img("u",120,$dati["user_id"])."'><h1>{$dati["username"]}".($dati["user_livello"]?" <em>({$_NOMI_LIVELLI[$dati["user_livello"]]})</em>":"")."</h1><div class='data registrazione'>Utente di Storia dei Film dal <strong>".data($dati["user_regdate"])."</strong></div>".riformatta($dati["user_bio"]));
+$commenti=db::query("SELECT COUNT(*) FROM sdmt_comments WHERE ID_user={$dati["user_id"]} AND text!=''")->valore();
+$recensioni=db::query("SELECT COUNT(*) FROM sdmt_recensioni WHERE (Recensore IN (SELECT ID FROM sdml_recensore WHERE ID_user={$dati["user_id"]}) OR Recensore2 IN (SELECT ID FROM sdml_recensore WHERE ID_user={$dati["user_id"]})) AND active=1")->valore();
+$articoli=db::query("SELECT COUNT(*) FROM sdmt_articoli WHERE (Recensore IN (SELECT ID FROM sdml_recensore WHERE ID_user={$dati["user_id"]}) OR Recensore2 IN (SELECT ID FROM sdml_recensore WHERE ID_user={$dati["user_id"]})) AND active=1")->valore();
+list($voti,$media_voti)=db::query("SELECT COUNT(*),ROUND(AVG(value),1) FROM sdmt_voti_new WHERE ID_user={$dati["user_id"]}")->rigaN();
+$media_voti=str_replace(".",",",$media_voti);
+$nomeurl=rawurlencode($uid).".html";
+M::carica(M::modulo("box",array("flag"=>"I","titolo"=>"I numeri di ".$dati["username"],"class"=>"usercontrib")),"<a href='/profilo/commenti/$nomeurl' class='usercommenti'><strong>$commenti</strong> commenti</a><a href='/profilo/voti/$nomeurl' class='uservoti'><strong>$voti</strong> voti (<b>$media_voti</b> in media)</a><a href='/profilo/recensioni/$nomeurl' class='userrecensioni'><strong>$recensioni</strong> recensioni</a><a href='/profilo/articoli/$nomeurl' class='userarticoli'><strong>$articoli</strong> articoli</a>");

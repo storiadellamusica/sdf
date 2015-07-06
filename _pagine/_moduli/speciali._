@@ -1,0 +1,23 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+if( !isset($GLOBALS["modulo_speciali_eseguito"])
+		&&
+		(
+			(
+				isset($sezione)
+				&&
+				(list($tipo,$codice)=db::query("SELECT tipo,id_contenuto FROM _speciali WHERE tipo='$sezione' AND id_contenuto='$id'")->rigaN())
+			)
+			||
+			(
+				!isset($sezione)
+				&&
+				(list($tipo,$codice)=db::query("SELECT tipo,id_contenuto FROM _speciali WHERE in_home=1 ORDER BY RAND()")->rigaN())
+			)
+		)
+	){
+		$GLOBALS["modulo_speciali_eseguito"]=true;
+		M::carica('<//div[@role="document"]','<a href="'.linka($tipo.db::query("SELECT url FROM ".($tipo=='a'?"sdmt_articoli":"sdml_artista")." WHERE ID=$codice")->valore()).'" class="linkspeciale"></a>');
+		$body=M::$TLAB->DOM->getElementsByTagName("body")->item(0);
+		$body->setAttribute("class","speciale");
+		$body->setAttribute("style",'background-image:url('._URL_MEDIA.'speciali/'.$tipo.$codice.'.jpg)');
+	}

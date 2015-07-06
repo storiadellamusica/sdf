@@ -1,0 +1,25 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Contatti");
+M::modulo("colonne standard");
+if(isset($_POST["mail"])){
+	$destinatari=array(
+		"a"=>"Storiadeifilm.it <peasyfloyd@hotmail.com>",
+		"b"=>"Storiadeifilm.it <peasyfloyd@hotmail.com>",
+		"c"=>"Storiadeifilm.it <peasyfloyd@hotmail.com>",
+	);
+	if(preg_match_all("#http\:\/\/#",$_POST["messaggio"])<2)
+	if($_POST["website"]=="http://"&&isset($destinatari[$_POST["oggetto"]])) //misura antispam
+		M::modulo("mailto",array("oggetto"=>"Storiadeifilm.it Comunicazione","destinatario"=>$destinatari[$_POST["oggetto"]],"testo"=>"<strong>Nuovo messaggio da ".entita($_POST["nome"])." (<a href='mailto:".entita($_POST["mail"])."'>".entita($_POST["mail"])."</a>)</strong>\n".entita($_POST["messaggio"])));
+	M::carica(M::modulo("box",array("class"=>"form_contatti","flag"=>"c","titolo"=>"Contatti")),"<br>Grazie per averci scritto! Ti risponderemo appena possibile.<br><br>");
+}else
+M::carica(M::modulo("box",array("class"=>"form_contatti","flag"=>"c","titolo"=>"Contatti")),"<form method='post' action='/"._URL."'><p>Puoi contattarci compilando questo modulo. Ti risponderemo appena possibile, grazie!</p><label for='form_oggetto'>Oggetto: </label><select name='oggetto' id='form_oggetto'><option value='a'>Richiesta Collaborazione</option><option value='b'>Informazioni Generali</option><option value='c'>Segnalazione Errori</option></select><div class='clearfix'></div><label for='form_nome'>Il tuo nome: </label><input type='text' name='nome' id='form_nome' value=''><input type='text' name='website' id='website' value='http://'><div class='clearfix'></div><label for='form_mail'>Il tuo indirizzo e-mail: </label><input type='text' name='mail' id='form_mail' value=''><div class='clearfix'></div><textarea name='messaggio' rows='6'></textarea><br><input type='submit' class='bottone' value='Invia messaggio'></form>");
+M::carica(M::modulo("box",array("class"=>"contatti","flag"=>"c","titolo"=>"Materiale")),"<p>&Egrave; possibile inviare materiale all'indirizzo:</p>
+<p class='indirizzo'>Alessandro Pascale - Storiadeifilm<br>
+Via Gilles des Chevreres 6 Aosta (AO) 11100</p>
+<p class='hyphenate'>Per motivi di energie, opportunità e spazio non si garantisce la recensione e/o pubblicazione di tutto il materiale che verrà inviato, ma soltanto di quello più meritevole, interessante o importante. Si assicura però ogni cosa spedita verrà visionata almeno una volta.</p>");
+M::carica(M::modulo("box",array("class"=>"contatti","flag"=>"s","titolo"=>"Sede")),"
+<p class='indirizzo'>Redazione Storiadeifilm c/o WebDesignGenova<br>
+Piazza San Matteo 17/7 - 16123 Genova</p>
+<p>P.IVA 01624330997</p>
+<p>e-mail: <a href='mailto:redazione@storiadeifilm.it'>redazione@storiadeifilm.it</a></p>");

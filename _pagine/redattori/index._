@@ -1,0 +1,12 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Redattori");
+M::modulo("colonne standard");
+$in_attesa=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='proposto'")->valore();
+$approvate=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='approvato'")->valore();
+$pubblicate=db::query("SELECT COUNT(*) FROM _sezione_news WHERE stato='pubblicato'")->valore();
+M::carica(M::modulo("box",array("flag"=>"N","titolo"=>"News","class"=>"contatti")),"<p>
+<a href='/redattori/news/in-attesa.html'>$in_attesa in attesa di approvazione</a><br>
+<a href='/redattori/news/approvate.html'>$approvate approvate per la pubblicazione</a><br>
+<a href='/redattori/news/pubblicate.html'>$pubblicate pubblicate</a>
+</p>");

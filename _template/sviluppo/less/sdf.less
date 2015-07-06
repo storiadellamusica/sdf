@@ -1,0 +1,64 @@
+// Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+@import "mixins";
+@import "basi";
+@import "font";
+@import "html5bp";
+
+body{
+	background:url(data:image/gif;base64,R0lGODlhAwADAIAAAMzMzP///yH5BAAAAAAALAAAAAADAAMAAAIEDA5mBQA7);
+	font: 12px @fontFamily;
+}
+
+@import "header";
+@import "menu";
+
+div[role=document]{
+	width: @larghezzaPagina;
+	position: relative;
+	margin: 0 auto;
+	padding-bottom: 30px;
+	background: #fff;
+	.dropshadow(0,0,40px,0.5);
+}
+@import "sottomenu";
+	
+@import "pagine/home";
+@import "pagine/login";
+@import "pagine/recensione";
+@import "pagine/artisti";
+@import "pagine/articoli";
+@import "pagine/collegamenti";
+@import "pagine/redazione";
+@import "pagine/contatti";
+@import "pagine/profilo";
+@import "pagine/elencocommenti";
+@import "pagine/elencovoti";
+@import "pagine/news";
+@import "pagine/classifiche";
+@import "pagine/errore404";
+@import "pagine/ricerca";
+@import "pagine/editing";
+
+footer{
+	padding-top: 20px;
+}
+
+#note{
+	clear: both;
+	padding: 10px 5% 0 5%;
+	img{
+		float: left;
+		margin: 5px 5px 0 0;
+	}
+	div{
+		padding-top: 5px;
+	}
+}
+
+.fb-like{
+	float: right;
+}
+@import "barra";
+@import "elementi";
+@import "html5bp2";
+@import "jquery-ui-1.8.23.custom.css";

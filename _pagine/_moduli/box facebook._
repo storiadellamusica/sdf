@@ -1,0 +1,8 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+	Crea un box della pagina di Storia con il plugin sociale di facebook. Utilizza i seguenti parametri:
+	-	dove: un selettore TLAB opzionale, viene di default inserito nella terza colonna
+
+*/
+M::carica(isset($dove)?$dove:_COLONNA3,'<div class="box-facebook"><div><div class="fb-like-box" data-href="https://www.facebook.com/pages/Storiadeifilmit/169379426215" data-width="201" data-height="300" data-show-faces="true" data-border-color="#fff" data-stream="false" data-header="false"></div></div></div>');

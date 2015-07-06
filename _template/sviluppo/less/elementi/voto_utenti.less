@@ -1,0 +1,64 @@
+.voti_utenti{
+	>div{
+		font-size: 14px;
+		padding: 20px;
+	}
+	.vota{
+		float: right;
+	}
+	.veditutti{
+		cursor: pointer;
+		[data-voto]{
+			position: relative;
+			top: 10px;
+		}
+		&::after{
+			content: " Vedi tutti i voti \25BC";
+		}
+		&.aperto::after{
+			content: " Nascondi i voti \25B2";
+		}
+		&:hover{
+			color: #666;
+		}
+	}
+	.dettagliovoti{
+		padding-top: 30px;
+		[data-voto]{
+			float: right;
+		}
+		>div{
+			width: 350px;
+			overflow: hidden;
+			padding: 15px;
+			img{
+				margin-right:3px;
+			}
+			&:nth-child(2n+1){
+				background: #f9f9f9;
+			}
+		}
+		table{
+			float: right;
+			margin-top: 30px;
+			background: #f9f9f9;
+			border-top: 6px solid #f9f9f9;
+			border-bottom: 6px solid #f9f9f9;
+			width: 400px;
+			text-align: right;
+			td{
+				padding: 2px 10px;
+				font-size: 14px;
+				font-weight: bold;
+				color: lighten(@testo,30%);
+			}
+			div{
+				width: 400px;
+				height: 16px;
+				background: @colore_b;
+				.verticalgradient(lighten(@colore_b,25%),@colore_b);
+				.angoliArrotondati(8px);
+			}
+		}
+	}
+}

@@ -1,0 +1,3 @@
+//div[@role="complementary"]/div[1]{
+	inc/banner/colonna_dx
+}

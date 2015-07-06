@@ -1,0 +1,39 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+M::accendi("tre_colonne");
+M::titolo("Collegamenti");
+M::modulo("colonne standard");
+M::carica(M::modulo("box",array("class"=>"form_contatti","flag"=>"c","titolo"=>"I migliori blog cinefili italiani","class"=>"elencolink")),'
+<a href="http://recensionidifilm.blogspot.com/" target="_blank"><img src="/static/collegamenti/recensioni_di_film.jpg" alt="Recensioni di film"></a>
+<a href="http://theemeraldforest.wordpress.com/" target="_blank"><img src="/static/collegamenti/the_emerald_forest.jpg" alt="The Emerald Forest"></a>
+<a href="http://giovanecinefilo.splinder.com/" target="_blank"><img src="/static/collegamenti/giovanecinefilo.gif" alt="giovanecinefilo"></a>
+<a href="http://cinedrome.splinder.com/" target="_blank"><img src="/static/collegamenti/cinedromei.gif" alt="cinedrome"></a>
+<a href="http://www.cinemavistodame.com" target="_blank"><img src="/static/collegamenti/cinemavistodame.gif" alt="cinema visto da me"></a>
+<a href="http://www.lessio.splinder.com/" target="_blank"><img src="/static/collegamenti/cinefilo.gif" alt="cinefilo"></a>
+<a href="http://slowfilm.splinder.com/" target="_blank"><img src="/static/collegamenti/slowfilm.gif" alt="slowfilm"></a>
+<a href="http://maupes.wordpress.com/" target="_blank"><img src="/static/collegamenti/maupes.gif" alt="mau pes" width="171" height="37"></a>
+<a href="http://www.pianosequenza.net/dblog/" target="_blank"><img src="/static/collegamenti/pianosequenza.gif" alt="pianosequenza"></a>
+<a href="http://delikatessen.splinder.com/" target="_blank"><img src="/static/collegamenti/delikatessen.gif" alt="delikatessen"></a>
+<a href="http://whoframedrogerrabbit.splinder.com/" target="_blank"><img src="/static/collegamenti/ammazzalavecchia.gif" alt="ammazza la vecchia"></a>
+<a href="http://tomobiki.blogspot.com/" target="_blank"><img src="/static/collegamenti/tomobiki.gif" alt="tomobiki"></a>
+<a href="http://ale55andra.splinder.com/" target="_blank"><img src="/static/collegamenti/ceraunavolta.gif" alt="C\'era una volta il cinema"></a>
+<a href="http://cinemante.blogspot.com/" target="_blank"><img src="/static/collegamenti/cinemasema.gif" alt="cinemante"></a>
+<a href="http://sonovivoenonhopiupaura.blogspot.com/" target="_blank"><img src="/static/collegamenti/sonovivo.gif" alt="sonovivo"></a>
+<a href="http://seriesanatomy.com" target="_blank"><img src="/static/collegamenti/seriesanatomy.jpg" alt="seriesanatomy"></a>
+<a href="http://thecinemacompany.wordpress.com" target="_blank"><img src="/static/collegamenti/the-cinema-company.jpg" alt="thecinemacompany"></a>
+');
+M::carica(M::modulo("box",array("class"=>"contatti","flag"=>"c","titolo"=>"Partner")),'
+<p><a href="http://www.viewconference.it" target="_blank"><img src="/static/img/view_conference.jpg" alt="VIEW Conference"> <strong>VIEW Conference</strong></a>
+<a href="http://ownair.it" target="_blank" style="float:right"><img src="/static/img/ownair.png" alt="Own Air"></a>
+</p>
+<p style="clear:both">
+<a href="http://www.oggiintv.eu" target="_blank"><img src="/static/collegamenti/oggiintv.png" alt="Oggi in televisione"></a>
+</p>
+');
+M::carica(M::modulo("box",array("class"=>"contatti","flag"=>"c","titolo"=>"Altri Siti")),'
+<p class="hyphenate">Questo sito è solo l\'ultimo anello di una lunga catena di esperienze importantissime on e offline. Vi segnaliamo di seguito alcune delle migliori:</p>
+<p><a href="http://www.imdb.com" target="_blank"><strong>IMDB</strong></a></p>
+<p><a href="http://www.persinsala.it" target="_blank"><strong>Persinsala</strong></a></p>
+<p><a href="http://www.rottentomatoes.com" target="_blank"><strong>Rotten Tomatoes </strong></a></p>
+<p><a href="http://www.comingsoon.it" target="_blank"><strong>Coming Soon </strong></a></p>
+<p><a href="http://www.mymovies.it" target="_blank"><strong>My Movies </strong></a></p>
+');

@@ -1,0 +1,16 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("RECENSIONI_PER_PAGINA",9);
+$totali=db::query("SELECT COUNT(*) FROM sdmt_recensioni WHERE active=1 AND $criterio ")->valore();
+if(!$totali)require _404;
+$pagine_totali=ceil($totali/RECENSIONI_PER_PAGINA);
+if($pagine_totali<$_NUMERO_PAGINA)require _404;
+$titolo.=" (pagina ".$_NUMERO_PAGINA." di ".$pagine_totali.")";
+M::accendi("tre_colonne");
+M::titolo($titolo);
+M::modulo("colonne standard");
+$contenitore=M::modulo("box",array("flag"=>"R","titolo"=>$titolo,"class"=>"elencorecensioni"));
+M::modulo("navigatore",array("dove"=>$contenitore,"pagine_totali"=>$pagine_totali));
+M::carica(
+	$contenitore,
+	"SELECT sdml_generi.Genere AS nome_genere,sdml_generi.sezione_id AS padre_genere,sdml_etichetta.Etichetta AS casa,sdml_artista.Artista,sdmt_recensioni.voto,sdmt_recensioni.Titolo_Disco,sdmt_recensioni.Etichetta,sdmt_recensioni.data_disco,sdmt_recensioni.Text,sdmt_recensioni.ID,sdmt_recensioni.url FROM sdmt_recensioni JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID JOIN sdml_generi ON sdml_generi.ID=sdmt_recensioni.Genere1 LEFT JOIN sdml_etichetta ON sdml_etichetta.ID=sdmt_recensioni.Etichetta WHERE active=1 AND $criterio ".(strpos($criterio,"ORDER BY")?"":"ORDER BY Data DESC, ID DESC")." LIMIT ".(($_NUMERO_PAGINA-1)*RECENSIONI_PER_PAGINA).",".RECENSIONI_PER_PAGINA,
+	'<a href="{linka,r{url}}"><img src="{img,r,135,{url}}" alt="{s,{Titolo_Disco}}"><span data-voto="{voto}"><strong>{voto}</strong>/10</span><h1>{s,{Titolo_Disco}}<br><span class="nastro {coloregenere,{padre_genere}}">{s,{nome_genere}}</span><div>di {s,{Artista}} ({s,{casa}} {data_disco})</div></h1>{Text,180}</a>');

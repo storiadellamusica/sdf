@@ -1,0 +1,71 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+	Interfaccia di accesso al database.
+	
+> new database
+		Restituisce un database connesso e inizializzato
+
+>	->query(q)
+		Esegue la query q sul database e restituisce il database per la concatenazione
+
+>	db::query(q)
+		Esegue la query q sul database interno e lo restituisce per la concatenazione
+
+>	->valore()
+		Restituisce la prima colonna della prima riga dell'ultima query e passa alla riga successiva
+
+>	->valori()
+		Restituisce un array di valori singoli composti dalla prima colonna delle righe ottenute
+
+>	->riga()
+		Restituisce un'array contente la prima riga dell'ultima query nel formato [nome_colonna=>valore,nome_colonna2=>valore2,...] e passa alla riga successiva
+
+>	->rigaN()
+		Restituisce un'array contente la prima riga dell'ultima query nel formato [0=>valore,1=>valore2,...] e passa alla riga successiva
+
+>	->righe()
+		Restituisce un'array bidimensionale contente tutti i dati ottenuti dall'ultima query nel formato [numero_riga=>[nome_colonna=>valore,nome_colonna2=>valore2,...],...]
+
+>	->id()
+		Restituisce l'id dell'ultimo inserimento avvenuto nel database
+
+*/
+class db{
+	private static $multiuso=null;
+	private $db,$handler_query;
+	function __construct(){
+		($this->db=@mysql_connect(_DATABASE_HOST,_DATABASE_USER,_DATABASE_PASSWORD))||die;
+		@mysql_select_db(_DATABASE_DATABASE,$this->db);
+		@mysql_query("SET time_zone='CET'",$this->db);
+	}
+	function query($q){
+		if(isset($this)&&get_class($this)==__CLASS__){
+			$this->handler_query=@mysql_query($q,$this->db);
+			return $this;
+		}
+		if(self::$multiuso==null)self::$multiuso=new db;
+		return self::$multiuso->query($q);
+	}
+	function valore(){
+		return @array_shift(@mysql_fetch_row($this->handler_query));
+	}
+	function riga(){
+		return @mysql_fetch_assoc($this->handler_query);
+	}
+	function rigaN(){
+		return @mysql_fetch_row($this->handler_query);
+	}
+	function righe(){
+		$righe=array();
+		while($righe[]=@mysql_fetch_assoc($this->handler_query));
+		return array_slice($righe,0,-1);
+	}
+	function valori(){
+		$valori=array();
+		while($tmp=@mysql_fetch_row($this->handler_query))$valori[]=$tmp[0];
+		return $valori;
+	}
+	function id(){
+		return @mysql_insert_id($this->db);
+	}
+}

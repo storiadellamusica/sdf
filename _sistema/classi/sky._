@@ -1,0 +1,153 @@
+<? // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+/*
+
+Classe per l'accesso ai dati di Sky.
+Modificata: migliorata la gestione della memoria, migliorata la gestione della cache.
+
+*/
+class sky{
+
+	private $channels_url = "http://guidatv.sky.it/app/guidatv/contenuti/data/grid/grid_meglio_channels.js";
+	private $channel_url = "http://guidatv.sky.it/app/guidatv/contenuti/data/grid/%YEAR%_%MONTH%_%DAY%/ch_%CHANNEL%.js";
+	private $genre_channels = array('film'=>array(101,102,103,104,105,106,129,130,133,134,138,146,301,303,304,306,308,310,312,315,319,320),'serial'=>array(101,102,103,104,105,106,109,110,111,114,117,132,133,134,141));
+	private $program_url = "http://guidatv.sky.it/EpgBackend/event_description.do?eid=";
+	public $channels;
+
+	public function __construct($genre = 'film') {
+		$this->init_channels($genre);
+	}
+	
+	private function init_channels($genre) {
+		$channels = $this->get_json($this->channels_url);
+		foreach($channels as $channel) {
+			if(in_array($channel->number,$this->genre_channels[$genre])) {
+				$this->channels[$channel->number] = $channel;
+			}
+		}
+	}
+
+	private function get_json($url){
+		$serverpath=_ROOT;
+		$url_parts = explode('?',$url);
+		if(count($url_parts)==1){
+			if(!$json=db::query("SELECT valore FROM _cache WHERE tipo='oggi in tv' AND id='".addslashes(basename($url))."' AND DATE(data)=DATE(NOW())")->valore()){
+				$json=file_get_contents($url);
+				db::query("DELETE FROM _cache WHERE tipo='oggi in tv' AND DATE(data)!=DATE(NOW())")->query("INSERT INTO _cache (tipo,id,valore) VALUES ('oggi in tv','".addslashes(basename($url))."','".addslashes($json)."')");
+			}
+		}elseif($url_parts[0]=='http://guidatv.sky.it/EpgBackend/event_description.do'){
+			$eid=explode('=',$url_parts[1]);
+			$cacheid='event_'.$eid[1].'.js';
+			if(!$json=db::query("SELECT valore FROM _cache WHERE tipo='oggi in tv' AND id='".addslashes($cacheid)."' AND DATE(data)=DATE(NOW())")->valore()){
+				$json=file_get_contents($url);
+				db::query("DELETE FROM _cache WHERE tipo='oggi in tv' AND DATE(data)!=DATE(NOW())")->query("INSERT INTO _cache (tipo,id,valore) VALUES ('oggi in tv','".addslashes($cacheid)."','".addslashes($json)."')");
+			}
+		} else {
+			$json = file_get_contents($url);	
+		}
+		return json_decode($json);
+	}
+	
+	private function channel_get_plan($day,$month,$year,$channel) {
+		$current_channel = $this->get_json(str_replace(array('%YEAR%','%MONTH%','%DAY%','%CHANNEL%'),array($year,$month,$day,$channel->id),$this->channel_url));
+		return $current_channel->plan;
+	}
+	
+	public function get_prime_time($genre = 'film') {
+		$prime_time = array();
+		foreach($this->channels as $channel) {
+			$programs = $this->channel_get_plan(date('d'),date('m'),date('y'),$channel);
+			foreach($programs as $program) {
+				if($program->genre == $genre) {
+					$start_time = explode(':',$program->starttime);
+					if(20<=intval($start_time[0]) and intval($start_time[0])<22) {
+						$details = $this->get_program_details($program->id,$program->title,true);
+						$prime_time[$channel->number] = $program;
+						$prime_time[$channel->number]->thumbnail_url = isset($details->thumbnail_url)?$details->thumbnail_url:"#";
+						$prime_time[$channel->number]->description = isset($details->description)?$details->description:"";
+					}
+				}
+			}
+		}
+		return $prime_time;
+	}
+
+	public function now_playing_all() {
+		$prime_time = array();
+		foreach($this->channels as $channel) {
+			$programs = $this->channel_get_plan(date('d'),date('m'),date('y'),$channel);
+			foreach($programs as $program) {
+					$start_time = explode(':',$program->starttime);
+					$program->endtime = date('H:i',mktime($start_time[0], $start_time[1]+$program->dur, 0, date('m'), date('d'), date('Y')));
+					if(date('U',mktime($start_time[0], $start_time[1], 0, date('m'), date('d'), date('Y')))<=date('U') and date('U',mktime($start_time[0], $start_time[1]+$program->dur, 0, date('m'), date('d'), date('Y')))>date('U')) {
+						$details = $this->get_program_details($program->id,$program->title,true);
+						$prime_time[$channel->number] = $program;
+						$prime_time[$channel->number]->thumbnail_url = $details->thumbnail_url;
+						$prime_time[$channel->number]->description = $details->description;
+						$prime_time[$channel->number]->running_from = abs(intval((date('U',mktime($start_time[0], $start_time[1], 0, date('m'), date('d'), date('Y')))-date('U'))/60));
+						continue 2;
+					}
+			}
+		}
+		return $prime_time;
+	}
+
+
+	public function now_playing($genre = 'film') {
+		$prime_time = array();
+		foreach($this->channels as $channel) {
+			$programs = $this->channel_get_plan(date('d'),date('m'),date('y'),$channel);
+			foreach($programs as $program) {
+				if($program->genre == $genre) {
+					$start_time = explode(':',$program->starttime);
+					$program->endtime = date('H:i',mktime($start_time[0], $start_time[1]+$program->dur, 0, date('m'), date('d'), date('Y')));
+					if(date('U',mktime($start_time[0], $start_time[1], 0, date('m'), date('d'), date('Y')))<=date('U') and date('U',mktime($start_time[0], $start_time[1]+$program->dur, 0, date('m'), date('d'), date('Y')))>date('U')) {
+						$details = $this->get_program_details($program->id,$program->title,true);
+						$prime_time[$channel->number] = $program;
+						$prime_time[$channel->number]->thumbnail_url = $details->thumbnail_url;
+						$prime_time[$channel->number]->description = $details->description;
+						$prime_time[$channel->number]->running_from = abs(intval((date('U',mktime($start_time[0], $start_time[1], 0, date('m'), date('d'), date('Y')))-date('U'))/60));
+						continue 2;
+					}
+				}
+			}
+		}
+		return $prime_time;
+	}
+	
+	public function get_second_time($genre = 'film') {
+		$second_time = array();
+		foreach($this->channels as $channel) {
+			$programs = $this->channel_get_plan(date('d'),date('m'),date('y'),$channel);
+			foreach($programs as $program) {
+				if($program->genre == $genre) {
+					$start_time = explode(':',$program->starttime);
+					if(22<=intval($start_time[0]) and intval($start_time[0])<24) {
+						$details = $this->get_program_details($program->id,$program->title,true);
+						$second_time[$channel->number] = $program;
+						$second_time[$channel->number]->thumbnail_url = isset($details->thumbnail_url)?$details->thumbnail_url:"#";
+						$second_time[$channel->number]->description = isset($details->description)?$details->description:"";
+					}
+				}
+			}
+		}
+		return $second_time;
+	}
+	
+	public function get_program_details($pid,$title,$fromSKY = true) {
+		if($fromSKY) {
+			return $this->get_json($this->program_url.$pid);
+		} else {
+			return "";
+			require_once('../imdbphp/imdb.class.php');
+			
+			$search = new imdbsearch();
+		 	$search->setsearchname($title);
+		 	$results = $search->results();
+			
+			if($results and count($results)>0) {
+				$movie = new imdb($results[0]->imdbid());
+				$movie->setid($results[0]->imdbid());
+			}
+		}
+	}
+}

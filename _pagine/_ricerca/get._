@@ -1,0 +1,38 @@
+<?php // Author: Stefano Peloso (http://stefano.io) - Released under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+define("LIMITE",100);
+function q($a){$qq=addslashes($_GET["q"]);return " ($a LIKE '$qq%' OR $a LIKE '% $qq%') ";}
+$nome=array("x"=>"negli artisti","r"=>"nelle recensioni","a"=>"negli articoli","n"=>"nelle news");
+$queries=array(
+"x"=>"SELECT '' AS data,url AS img,url,CONCAT('<strong>',Artista,'</strong>') AS titolo,'x' AS tipo FROM sdml_artista WHERE ".q("Artista")." GROUP BY Artista ORDER BY Artista",
+"r"=>"SELECT '' AS data,sdmt_recensioni.url AS img,sdmt_recensioni.url,CONCAT('<strong>',sdmt_recensioni.Titolo_disco,'</strong>',sdml_artista.Artista) AS titolo,'r' AS tipo FROM sdmt_recensioni LEFT JOIN sdml_artista ON sdmt_recensioni.Artista=sdml_artista.ID WHERE sdmt_recensioni.active=1 AND (".q("sdmt_recensioni.Titolo_disco")." OR ".q("sdml_artista.Artista").") ORDER BY Data DESC",
+"a"=>"SELECT '' AS data,sdmt_articoli.url AS img,sdmt_articoli.url,CONCAT('<strong>',sdmt_articoli.Titolo,'</strong>') AS titolo,'a' AS tipo FROM sdmt_articoli LEFT JOIN sdml_artista ON sdmt_articoli.Artista=sdml_artista.ID WHERE active=1 AND (".q("sdmt_articoli.Titolo")." OR ".q("sdml_artista.Artista").") ORDER BY Data DESC",
+"n"=>"SELECT data AS data,id AS img,id AS url,titolo,'n' AS tipo FROM _sezione_news WHERE stato='pubblicato' AND ".q("titolo")." ORDER BY data DESC");
+if(isset($nome[$_GET["k"]])){
+	$dove=" ".$nome[$_GET["k"]];
+	$query=$queries[$_GET["k"]];
+}else{
+	$dove="";
+	$query="SELECT * FROM
+		({$queries["x"]}) AS x
+	UNION
+		({$queries["r"]})
+	UNION
+		({$queries["n"]})
+	UNION
+		({$queries["a"]})
+	ORDER BY titolo";
+}
+M::accendi("mono");
+M::titolo("Cerca ".entita($_GET["q"].$dove));
+function trattanews($t,$a){
+	return $t=="n"?"<strong>".anteprimaTesto($a,60)."</strong>":$a;
+}
+function linka2($a,$b,$c,$d){
+	return $a!="n"?
+		linka($a.$b)
+	:
+		"/news/$b/".formattadata_news($c)."-".urlizza($d).".html";
+}
+M::carica(M::carica(M::modulo("box",array("flag"=>"C","titolo"=>"Cerca ".entita($_GET["q"]).$dove,"class"=>"boxcerca tuttapagina")),"<p>Risultati della ricerca di <em>".entita($_GET["q"])."</em>$dove:</p><div class='cercarisultati'></div>"),
+	$query." LIMIT ".LIMITE,
+	'<a href="{linka2,{tipo},{url},{data},{titolo}}"><img src="{img,{tipo},50,{img}}">{trattanews,{tipo},{titolo}}</a>');
